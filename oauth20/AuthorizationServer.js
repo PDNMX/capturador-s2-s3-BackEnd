@@ -12,7 +12,7 @@ const fs = require('fs');
 var cors = require('cors');
 
 
-require('dotenv').config({path: './config/config.env'});
+require('dotenv').config({path: './.env'});
 //require('dotenv').config({path: './config/configuration.env'});
 
 var userService= require("./mongo/service/mongoUser");
