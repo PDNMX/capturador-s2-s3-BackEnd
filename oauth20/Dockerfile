@@ -1,5 +1,4 @@
 FROM node:16
-
 ADD . /oauth20v2
 WORKDIR /oauth20v2
 

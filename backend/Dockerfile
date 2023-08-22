@@ -1,9 +1,11 @@
 FROM node:18-alpine
 
+MAINTAINER Sergio Rodríguez <sergio.rdzsg@gmail.com>
+
 ADD . /backend
 WORKDIR /backend
 
-RUN npm install
+RUN npm install \
 && npm cache clean --force  
 
 EXPOSE 3004
