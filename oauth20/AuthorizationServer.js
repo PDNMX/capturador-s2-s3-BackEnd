@@ -27,7 +27,7 @@ app.use(bodyParser.urlencoded({ extended: true })); // support form-encoded bodi
 app.use(cors());
 
 //connection mongo db
-const db = mongoose.connect('mongodb://'+process.env.USERMONGO+':'+process.env.PASSWORDMONGO+'@'+process.env.HOSTMONGO+'/'+process.env.DATABASE, { useNewUrlParser: true,  useUnifiedTopology: true  })
+const db = mongoose.connect('mongodb://'+process.env.USERMONGO+':'+process.env.PASSWORDMONGO+'@'+process.env.HOSTMONGO+'/'+process.env.DATABASE + '?authSource=admin', { useNewUrlParser: true,  useUnifiedTopology: true  })
     .then(() => console.log('Connect to MongoDB..'))
     .catch(err => console.error('Could not connect to MongoDB..', err))
 
@@ -212,7 +212,8 @@ let decodeClientCredentials = function(req) {
     return { id: clientId, secret: clientSecret };
 };
 
-let server = app.listen(process.env.PORTSERVER, function () {
+let port = process.env.PORT || 3005;
+let server = app.listen(port, function () {
     let host = server.address().address;
     let port = server.address().port;
     console.log(' Authorization Server is listening at http://%s:%s', host, port);

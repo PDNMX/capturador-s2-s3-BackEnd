@@ -70,7 +70,7 @@ if (typeof process.env.HOST_EMAIL === 'undefined') {
 //connection mongo db
 // console.log('mongodb://' + process.env.USERMONGO + ':' + process.env.PASSWORDMONGO + '@' + process.env.HOSTMONGO + '/' + process.env.DATABASE);
 const db = mongoose
-  .connect('mongodb://' + process.env.USERMONGO + ':' + process.env.PASSWORDMONGO + '@' + process.env.HOSTMONGO + '/' + process.env.DATABASE, { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
+  .connect('mongodb://' + process.env.USERMONGO + ':' + process.env.PASSWORDMONGO + '@' + process.env.HOSTMONGO + '/' + process.env.DATABASE + '?authSource=admin', { useNewUrlParser: true, useUnifiedTopology: true, useCreateIndex: true })
   .then(() => console.log('Connect to MongoDB..'))
   .catch(err => console.error('Could not connect to MongoDB..', err));
 mongoose.set('useFindAndModify', false);
@@ -79,7 +79,7 @@ let S2 = mongoose.connection.useDb('S2');
 let S3S = mongoose.connection.useDb('S3_Servidores');
 let S3P = mongoose.connection.useDb('S3_Particulares');
 //let S2New = mongoose.connection.useDb('S2');
-let port = process.env.PORT || 3005;
+let port = process.env.PORT || 3004;
 let app = express();
 app.use(cors(), bodyParser.urlencoded({ extended: true }), bodyParser.json());
 
