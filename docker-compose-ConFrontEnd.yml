@@ -21,7 +21,7 @@ services:
   oauth2:
     restart: always
     build:
-      context: ./oauth20
+      context: ./capturador-s2-s3-BackEnd/oauth20
       dockerfile: Dockerfile
     environment:
       EXT: 86400
@@ -41,7 +41,7 @@ services:
   backend:
     restart: always
     build:
-      context: ./backend
+      context: ./capturador-s2-s3-BackEnd/backend
       dockerfile: Dockerfile
     environment:
       USERMONGO: ${DB_ROOT_USER}
@@ -58,6 +58,19 @@ services:
       - mongo
     ports:
       - ${PORT_API}:3004
+
+  frontend:
+    restart: always
+    build:
+      context: ./capturador-s2-s3-FrontEnd/
+      dockerfile: Dockerfile
+    environment:
+      VITE_URL_API: ${URL_API}
+      VITE_URL_OAUTH: ${URL_OAUTH}
+      VITE_CLIENT_ID: ${CLIENT_ID}
+      VITE_CLIENT_SECRET: ${CLIENT_SECRET}
+    ports:
+      - ${PORT_FRONTEND}:5173
 
 volumes:
   mongo: {}
