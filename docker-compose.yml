@@ -57,7 +57,7 @@ services:
     links:
       - mongo
     ports:
-      - ${PORT_API}:3004
+      - ${PORT_BACKEND}:3004
 
 volumes:
   mongo: {}

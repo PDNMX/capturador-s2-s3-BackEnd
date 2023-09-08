@@ -57,7 +57,7 @@ services:
     links:
       - mongo
     ports:
-      - ${PORT_API}:3004
+      - ${PORT_BACKEND}:3004
 
   frontend:
     restart: always
@@ -65,7 +65,7 @@ services:
       context: ./capturador-s2-s3-FrontEnd/
       dockerfile: Dockerfile
     environment:
-      VITE_URL_API: ${URL_API}
+      VITE_URL_API: ${URL_BACKEND}
       VITE_URL_OAUTH: ${URL_OAUTH}
       VITE_CLIENT_ID: ${CLIENT_ID}
       VITE_CLIENT_SECRET: ${CLIENT_SECRET}
