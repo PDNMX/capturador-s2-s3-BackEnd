@@ -1,15 +1,16 @@
 var express = require("express");
 var bodyParser = require('body-parser');
 var randomstring = require("randomstring");
-var cons = require('consolidate');
+//var cons = require('consolidate');
 var __ = require('underscore');
 __.string = require('underscore.string');
 const mongoose = require('mongoose');
 var randtoken = require('rand-token');
 var jwt = require('jsonwebtoken');
-const https = require('https')
-const fs = require('fs');
+/* const https = require('https')
+const fs = require('fs'); */
 var cors = require('cors');
+const crypto = require("crypto");
 
 
 require('dotenv').config({path: './.env'});
@@ -19,6 +20,17 @@ var userService= require("./mongo/service/mongoUser");
 var clientService = require("./mongo/service/mongoClient");
 var tokenService = require("./mongo/service/mongoToken");
 var tokenModel = require('./mongo/model/token');
+
+// Encrypts the password using SHA256 Algorithm, for enhanced security of the password
+const encryptPassword = (password) => {
+    // We will hash the password using SHA256 Algorithm before storing in the DB
+    // Creating SHA-256 hash object
+    const hash = crypto.createHash("sha256");
+    // Update the hash object with the string to be encrypted
+    hash.update(password);
+    // Get the encrypted value in hexadecimal format
+    return hash.digest("hex");
+  };
 
 var app = express();
 //parse the response
@@ -45,7 +57,7 @@ app.post('/oauth/token',async  function(req, res) {
                     if (req.body.grant_type == 'password'){
                         if (req.body.username && req.body.password) {
                             let username = req.body.username;
-                            let password = req.body.password;
+                            let password = encryptPassword(req.body.password);
 
                             let user = await userService.getUser(username, password);
                             let scopes= '';

@@ -27,6 +27,7 @@ const moment = require('moment-timezone');
 const mongoose = require('mongoose');
 const yaml = require('js-yaml');
 const fs = require('fs');
+const crypto = require("crypto");
 //const newS2User = require('./schemas/model.new.s2.js');
 //importar el modelo nuevosUsuarios ubicado en./schemas/model.new.s2.js
 //const { nuevosUsuarios } = require('./schemas/model.new.s2.js/index.js');
@@ -575,6 +576,17 @@ app.put('/edit/provider', async (req, res) => {
   }
 });
 
+// Encrypts the password using SHA256 Algorithm, for enhanced security of the password
+const encryptPassword = (password) => {
+  // We will hash the password using SHA256 Algorithm before storing in the DB
+  // Creating SHA-256 hash object
+  const hash = crypto.createHash("sha256");
+  // Update the hash object with the string to be encrypted
+  hash.update(password);
+  // Get the encrypted value in hexadecimal format
+  return hash.digest("hex");
+};
+
 app.post('/create/user', async (req, res) => {
   try {
     var code = validateToken(req);
@@ -610,41 +622,12 @@ app.post('/create/user', async (req, res) => {
           }
 
           generatepassword();
-          var passwordValidator = require('password-validator');
-          var schema = new passwordValidator();
-
-          schema
-            .is()
-            .min(8) // Minimum length 8
-            .is()
-            .max(100) // Maximum length 100
-            .has()
-            .uppercase() // Must have uppercase letters
-            .has()
-            .lowercase() // Must have lowercase letters
-            .has()
-            .digits(1) // Must have at least 2 digits
-            .has()
-            .symbols(1)
-            .has()
-            .not()
-            .spaces() // Should not have spaces
-            .is()
-            .not()
-            .oneOf(['Passw0rd', 'Password123']); // Blacklist these values
-
-          while (schema.validate(pass) == false) {
-            generatepassword();
-          }
-
-          if (schema.validate(pass) == false) {
-            while (schema.validate(password) == false) {
-              generatepassword();
-            }
-          }
+          
           //// Aqui se crea el objeto json que se va a insertar en la base de datos
           let fechaActual = moment();
-          let newBody = { ...req.body, contrasena: pass, fechaAlta: fechaActual.format(), vigenciaContrasena: fechaActual.add(3, 'months').format().toString(), estatus: true };
+          let passHash = encryptPassword(pass);
+          console.log(passHash);
+          let newBody = { ...req.body, contrasena: passHash, fechaAlta: fechaActual.format(), vigenciaContrasena: fechaActual.add(3, 'months').format().toString(), estatus: true };
 
           await schemaUserCreate.concat(schemaUser).validate({
             nombre: newBody.nombre,
@@ -655,7 +638,7 @@ app.post('/create/user', async (req, res) => {
             telefono: newBody.telefono,
             extension: newBody.extension,
             usuario: newBody.usuario,
-            constrasena: pass,
+            constrasena: newBody.contrasena,
             sistemas: newBody.sistemas,
             proveedorDatos: newBody.proveedorDatos,
             estatus: true,
@@ -668,7 +651,7 @@ app.post('/create/user', async (req, res) => {
           }
 
           delete newBody.constrasena;
-          newBody['constrasena'] = pass;
+          newBody['constrasena'] = passHash;
           newBody['contrasenaNueva'] = true;
           newBody['rol'] = 2;
           if (req.body.apellidoDos == '' || req.body.apellidoDos === undefined) {
@@ -683,16 +666,16 @@ app.post('/create/user', async (req, res) => {
           });
 
           const message = {
-            text: 'Bienvenido al Sistema de Carga de datos S2 y S3',
+            text: 'Bienvenido al Sistema de Captura de Información - PDN',
             from: process.env.EMAIL,
             to: newBody.correoElectronico,
-            subject: 'Bienvenido al Sistema de Carga de datos S2 y S3',
-            attachment: [{ data: '<html>Buen día anexamos tu contraseña nueva para acceder al portal de la PDN. Contraseña:  <br><i><b><h3>' + pass + '</h3></b></i></html>', alternative: true }]
+            subject: 'Bienvenido al Sistema de Captura de Información - PDN',
+            attachment: [{ data: '<html><p>Buen día, anexamos tu credenciales para acceder al Sistema de Captura de Información:</p><br><p>Usuario: <code>' + newBody.usuario + '</code></p><br><p>Contraseña: <code>' + pass + '</code></p><br><br><p>Al iniciar sesión por primera vez deberás establecer una nueva contraseña</p></html>', alternative: true }]
           };
 
           client.send(message, function (err, message) {
             if (err != null) {
-              res.status(200).json({ message: 'Hay errores al enviar tu nueva contraseña.Ponte en contacto con el administrador.', Status: 500 });
+              res.status(200).json({ message: 'Hay errores al enviar tu nueva contraseña. Ponte en contacto con el administrador.', Status: 500 });
             }
           });
 
@@ -2638,21 +2621,22 @@ app.post('/resetpassword', async (req, res) => {
     });
 
     const message = {
-      text: ' Bienvenido al Sistema de Carga de datos S2 y S3',
+      text: 'Sistema de Captura de Información - PDN',
       from: process.env.EMAIL,
       to: correo,
-      subject: ' Bienvenido al Sistema de Carga de datos S2 y S3',
-      attachment: [{ data: '<html>Buen día anexamos tu contraseña nueva para acceder al portal de la PDN. Contraseña:  <br><i><b><h3>' + password + '</h3></b></i></html>', alternative: true }]
+      subject: ' Sistema de Captura de Información - PDN',
+      attachment: [{ data: '<html><p>Buen día, anexamos tu contraseña para acceder al Sistema de Captura de Información:</p><br><p>Contraseña: <code></p></html>' + password + '</code><br><br></html>', alternative: true }]
+
     };
 
     // send the message and get a callback with an error or details of the message that was sent
     client.send(message, function (err, message) {
       if (err != null) {
-        res.status(200).json({ message: 'Hay errores al enviar tu nueva contraseña.Ponte en contacto con el administrador.', Status: 500 });
+        res.status(200).json({ message: 'Hay errores al enviar tu nueva contraseña. Ponte en contacto con el administrador.', Status: 500 });
       }
     });
     let fechaActual = moment();
-
+    password = encryptPassword(password);
     const respuesta = await User.updateOne({ correoElectronico: correo }, { constrasena: password, contrasenaNueva: true, vigenciaContrasena: fechaActual.add(3, 'months').format().toString() });
     res.status(200).json({ message: 'Se ha enviado tu nueva contraseña al correo electrónico proporcionado.', Status: 200 });
   } catch (e) {
@@ -2662,8 +2646,8 @@ app.post('/resetpassword', async (req, res) => {
 
 app.post('/changepassword', async (req, res) => {
   try {
-    let constrasena = req.body.constrasena;
-    let passwordConfirmation = req.body.passwordConfirmation;
+    let constrasena = encryptPassword(req.body.constrasena);
+    let passwordConfirmation = encryptPassword(req.body.passwordConfirmation);
     let id = req.body.user;
 
     if (constrasena != passwordConfirmation) {
