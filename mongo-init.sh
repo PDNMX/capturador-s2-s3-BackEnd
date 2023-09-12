@@ -4,13 +4,13 @@ mongosh <<EOF
 use $MONGO_INITDB_DATABASE
 db.createCollection('usuarios')
 db.usuarios.insertOne({
-  nombre: 'example',
-  apellidoUno: 'example',
-  apellidoDos: 'example',
-  cargo: 'Administrador',
-  correoElectronico: 'admin@gmail.com',
-  telefono: '0000000000',
-  extension: '626262',
+  nombre: '',
+  apellidoUno: '',
+  apellidoDos: '',
+  cargo: '',
+  correoElectronico: '',
+  telefono: '',
+  extension: '',
   usuario: '$ADMIN_USER',
   constrasena: '$(echo -n $ADMIN_PASSWORD | sha256sum | cut -c-64)',
   sistemas: ['S2', 'S3S', 'S3P'],
