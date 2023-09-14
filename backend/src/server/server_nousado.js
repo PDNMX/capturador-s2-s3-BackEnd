@@ -76,9 +76,6 @@ const db = mongoose
   .catch(err => console.error('Could not connect to MongoDB..', err));
 mongoose.set('useFindAndModify', false);
 
-let S2 = mongoose.connection.useDb('S2');
-let S3S = mongoose.connection.useDb('S3_Servidores');
-let S3P = mongoose.connection.useDb('S3_Particulares');
 //let S2New = mongoose.connection.useDb('S2');
 let port = process.env.PORT || 3004;
 let app = express();
@@ -387,7 +384,7 @@ app.post('/validateSchemaS3P', async (req, res) => {
         arrayDocuments.push(newdocument);
       }
 
-      let wasInvalid;
+      levalidateSchemaS3St wasInvalid;
 
       for (let val of respuesta) {
         if (!val.valid) {
@@ -399,8 +396,7 @@ app.post('/validateSchemaS3P', async (req, res) => {
         res.status(500).json({ message: 'Error : La validación no fue exitosa', Status: 500, response: respuesta });
       } else {
         //se insertan
-        console.log('paso la validacion');
-        try {
+        validateSchemaS3Stry {
           let psancionados = S3P.model('Psancionados', psancionadosSchema, 'psancionados');
           let response;
           response = await psancionados.insertMany(arrayDocuments);
@@ -430,387 +426,7 @@ app.post('/validateSchemaS3P', async (req, res) => {
   }
 });
 
-app.delete('/deleteUser', async (req, res) => {
-  try {
-    var code = validateToken(req);
-    if (code.code == 401) {
-      res.status(401).json({ code: '401', message: code.message });
-    } else if (code.code == 200) {
-      if (req.body.request._id) {
-        var data = [];
 
-        let fechabaja = moment().format();
-        let response = await User.findByIdAndUpdate(req.body.request._id, { $set: { fechaBaja: fechabaja } }).exec();
-        res.status(200).json({ message: 'OK', Status: 200, response: response });
-      } else {
-        res.status(500).json([{ Error: 'Datos incompletos' }]);
-      }
-    }
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-app.delete('/deleteProvider', async (req, res) => {
-  try {
-    var code = validateToken(req);
-    if (code.code == 401) {
-      res.status(401).json({ code: '401', message: code.message });
-    } else if (code.code == 200) {
-      if (req.body.request._id) {
-        let fechabaja = moment().format();
-        let response = await Provider.findByIdAndUpdate(req.body.request._id, { $set: { fechaBaja: fechabaja, estatus: false } }).exec();
-        let users = await User.updateMany({ proveedorDatos: req.body.request._id }, { $set: { estatus: false } });
-        res.status(200).json({ message: 'OK', Status: 200, response: response });
-      } else {
-        res.status(500).json({ message: 'Error : Datos incompletos', Status: 500 });
-      }
-    }
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-app.post('/create/provider', async (req, res) => {
-  try {
-    var code = validateToken(req);
-
-    if (code.code == 401) {
-      res.status(401).json({ code: '401', message: code.message });
-    } else if (code.code == 200) {
-      try {
-        await schemaProvider.validate({
-          dependencia: req.body.dependencia,
-          sistemas: req.body.sistemas,
-          estatus: true,
-          fechaAlta: moment().format()
-        });
-        req.body['estatus'] = true;
-
-        const nuevoProovedor = new Provider(req.body);
-        let responce;
-        responce = await nuevoProovedor.save();
-
-        res.status(200).json(responce);
-      } catch (e) {
-        let errorMessage = {};
-        errorMessage['errores'] = e.errors;
-        errorMessage['campo'] = e.path;
-        errorMessage['tipoError'] = e.type;
-        errorMessage['mensaje'] = e.message;
-        res.status(400).json(errorMessage);
-      }
-    }
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-app.put('/edit/provider', async (req, res) => {
-  try {
-    var code = validateToken(req);
-
-    if (code.code == 401) {
-      res.status(401).json({ code: '401', message: code.message });
-    } else if (code.code == 200) {
-      try {
-        await Yup.object().shape({ fechaActualizacion: Yup.string().required() }).concat(schemaProvider).validate({
-          dependencia: req.body.dependencia,
-          sistemas: req.body.sistemas,
-          estatus: req.body.estatus,
-          fechaActualizacion: moment().format()
-        });
-
-        const nuevoProovedor = new Provider(req.body);
-        let responce;
-
-        if (req.body._id) {
-          if (req.body.estatus == false) {
-            User.updateMany({ proveedorDatos: req.body._id }, { estatus: false }).exec();
-          }
-          var id = req.body._id.toString();
-          var sistemasproveedor = req.body.sistemas;
-          var usuarios = await User.find({ proveedorDatos: id });
-          var nuevoSistemas = [];
-
-          usuarios.map(async row => {
-            if (sistemasproveedor.length < row.sistemas.length) {
-              nuevoSistemas = [];
-              row.sistemas.map(sistemasusuario => {
-                sistemasproveedor.map(sistema => {
-                  if (sistema == sistemasusuario) {
-                    nuevoSistemas.push(sistema);
-                  }
-                });
-              });
-              await User.updateOne({ _id: row._id }, { sistemas: nuevoSistemas });
-            } else if ((sistemasproveedor.length == 2 || sistemasproveedor.length == 1) && (row.sistemas.length == 1 || row.sistemas.length == 2)) {
-              nuevoSistemas = [];
-              row.sistemas.map(sistemasusuario => {
-                sistemasproveedor.map(sistema => {
-                  if (sistema == sistemasusuario) {
-                    nuevoSistemas.push(sistema);
-                  }
-                });
-              });
-              await User.updateOne({ _id: row._id }, { sistemas: nuevoSistemas });
-            }
-          });
-
-          responce = await Provider.findByIdAndUpdate(req.body._id, nuevoProovedor).exec();
-          res.status(200).json(responce);
-        } else {
-          res.status(500).json({ message: 'Error : Datos incompletos', Status: 500 });
-        }
-      } catch (e) {
-        let errorMessage = {};
-        errorMessage['errores'] = e.errors;
-        errorMessage['campo'] = e.path;
-        errorMessage['tipoError'] = e.type;
-        errorMessage['mensaje'] = e.message;
-        res.status(400).json(errorMessage);
-      }
-    }
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-// Encrypts the password using SHA256 Algorithm, for enhanced security of the password
-const encryptPassword = (password) => {
-  // We will hash the password using SHA256 Algorithm before storing in the DB
-  // Creating SHA-256 hash object
-  const hash = crypto.createHash("sha256");
-  // Update the hash object with the string to be encrypted
-  hash.update(password);
-  // Get the encrypted value in hexadecimal format
-  return hash.digest("hex");
-};
-
-app.post('/create/user', async (req, res) => {
-  try {
-    var code = validateToken(req);
-    if (code.code == 401) {
-      res.status(401).json({ code: '401', message: code.message });
-    } else if (code.code == 200) {
-      try {
-        var correoexiste = await User.find({ correoElectronico: { $regex: new RegExp('^' + req.body.correoElectronico, 'i') } }, { fechaBaja: { $eq: null } }).countDocuments();
-        if (correoexiste === undefined) {
-          correoexiste = 0;
-        }
-
-        var usuarioexiste = await User.find({ usuario: { $regex: new RegExp('^' + req.body.usuario, 'i') } }, { fechaBaja: { $eq: null } }).countDocuments();
-        if (usuarioexiste === undefined) {
-          ucreatesuarioexiste = 0;
-        }
-
-        if (correoexiste > 0 || usuarioexiste > 0) {
-          res.status(500).json({ message: 'El correo electrónico y/o nombre de usuario ya existe.Debes ingresar otro.', Status: 500 });
-        } else {
-          var generator = require('generate-password');
-          var pass = '';
-          function generatepassword() {
-            pass = generator.generate({
-              length: 8,
-              numbers: true,
-              symbols: true,
-              lowercase: true,
-              uppercase: true,
-              strict: true,
-              exclude: '_[]<>~´¬@^⌐«»°√α±÷©§'
-            });
-          }
-
-          generatepassword();
-          
-          //// Aqui se crea el objeto json que se va a insertar en la base de datos
-          let fechaActual = moment();
-          let passHash = encryptPassword(pass);
-          console.log(passHash);
-          let newBody = { ...req.body, contrasena: passHash, fechaAlta: fechaActual.format(), vigenciaContrasena: fechaActual.add(3, 'months').format().toString(), estatus: true };
-
-          await schemaUserCreate.concat(schemaUser).validate({
-            nombre: newBody.nombre,
-            apellidoUno: newBody.apellidoUno,
-            apellidoDos: newBody.apellidoDos,
-            cargo: newBody.cargo,
-            correoElectronico: newBody.correoElectronico,
-            telefono: newBody.telefono,
-            extension: newBody.extension,
-            usuario: newBody.usuario,
-            constrasena: newBody.contrasena,
-            sistemas: newBody.sistemas,
-            proveedorDatos: newBody.proveedorDatos,
-            estatus: true,
-            fechaAlta: newBody.fechaAlta,
-            vigenciaContrasena: newBody.vigenciaContrasena,
-            rol: '2'
-          });
-          if (newBody.passwordConfirmation) {
-            delete newBody.passwordConfirmation;
-          }
-
-          delete newBody.constrasena;
-          newBody['constrasena'] = passHash;
-          newBody['contrasenaNueva'] = true;
-          newBody['rol'] = 2;
-          if (req.body.apellidoDos == '' || req.body.apellidoDos === undefined) {
-            newBody['apellidoDos'] = '';
-          }
-
-          const client = new SMTPClient({
-            user: process.env.EMAIL,
-            password: process.env.PASS_EMAIL,
-            host: process.env.HOST_EMAIL,
-            ssl: true
-          });
-
-          const message = {
-            text: 'Bienvenido al Sistema de Captura de Información - PDN',
-            from: process.env.EMAIL,
-            to: newBody.correoElectronico,
-            subject: 'Bienvenido al Sistema de Captura de Información - PDN',
-            attachment: [{ data: '<html><p>Buen día, anexamos tu credenciales para acceder al Sistema de Captura de Información:</p><br><p>Usuario: <code>' + newBody.usuario + '</code></p><br><p>Contraseña: <code>' + pass + '</code></p><br><br><p>Al iniciar sesión por primera vez deberás establecer una nueva contraseña</p></html>', alternative: true }]
-          };
-
-          client.send(message, function (err, message) {
-            if (err != null) {
-              res.status(200).json({ message: 'Hay errores al enviar tu nueva contraseña. Ponte en contacto con el administrador.', Status: 500 });
-            }
-          });
-
-          const nuevoUsuario = new User(newBody);
-          let response;
-          response = await nuevoUsuario.save();
-          res.status(200).json(response);
-        }
-      } catch (e) {
-        let errorMessage = {};
-        errorMessage['errores'] = e.errors;
-        errorMessage['campo'] = e.path;
-        errorMessage['tipoError'] = e.type;
-        errorMessage['mensaje'] = e.message;
-        res.status(400).json(errorMessage);
-      }
-    }
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-app.put('/edit/user', async (req, res) => {
-  try {
-    var code = validateToken(req);
-    if (code.code == 401) {
-      res.status(401).json({ code: '401', message: code.message });
-    } else if (code.code == 200) {
-      try {
-        var correoexiste = await User.find({ correoElectronico: { $eq: req.body.correoElectronico }, usuario: { $ne: req.body.usuario }, fechaBaja: { $eq: null } }).countDocuments();
-        if (correoexiste === undefined) {
-          correoexiste = 0;
-        }
-
-        var proveedorvigente = await Provider.findById(req.body.proveedorDatos);
-        let arrsistemas = [];
-        for (let sistemaproveedor of proveedorvigente.sistemas) {
-          for (let sistemauser of req.body.sistemas) {
-            if (sistemaproveedor == sistemauser) {
-              arrsistemas.push(sistemaproveedor);
-            }
-          }
-        }
-
-        if (correoexiste > 0) {
-          res.status(500).json({ message: 'Error: El correo electrónico ya existe.', tipo: 'Error.', Status: 500 });
-        } else if (proveedorvigente.fechaBaja != undefined) {
-          res.status(500).json({ message: 'Error: El campo proveedor de datos es requerido.', tipo: 'Error.', Status: 500 });
-        } else if (proveedorvigente.estatus == false && req.body.estatus == true) {
-          res.status(500).json({ message: 'Error: El estatus del proveedor es no vigente.', tipo: 'Error.', Status: 500 });
-        } else {
-          let newBody = { ...req.body };
-          newBody['sistemas'] = arrsistemas;
-          await schemaUser.validate({
-            nombre: newBody.nombre,
-            apellidoUno: newBody.apellidoUno,
-            apellidoDos: newBody.apellidoDos,
-            cargo: newBody.cargo,
-            correoElectronico: newBody.correoElectronico,
-            telefono: newBody.telefono,
-            extension: newBody.extension,
-            usuario: newBody.usuario,
-            constrasena: newBody.constrasena,
-            sistemas: newBody.sistemas,
-            proveedorDatos: newBody.proveedorDatos,
-            estatus: newBody.estatus
-          });
-          if (req.body.apellidoDos == '' || req.body.apellidoDos === undefined) {
-            newBody['apellidoDos'] = '';
-          }
-
-          const nuevoUsuario = new User(newBody);
-          let response;
-          if (req.body._id) {
-            response = await User.findByIdAndUpdate(req.body._id, nuevoUsuario).exec();
-            res.status(200).json(response);
-          } else {
-            res.status(500).json({ message: 'Error : Datos incompletos', tipo: 'Error.', Status: 500 });
-          }
-        }
-      } catch (e) {
-        let errorMessage = {};
-        errorMessage['errores'] = e.errors;
-        errorMessage['campo'] = e.path;
-        errorMessage['tipoError'] = e.type;
-        errorMessage['mensaje'] = e.message;
-        res.status(400).json(errorMessage);
-      }
-    }
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-app.post('/getUsers', async (req, res) => {
-  try {
-    var code = validateToken(req);
-    if (code.code == 401) {
-      res.status(401).json({ code: '401', message: code.message });
-    } else if (code.code == 200) {
-      let sortObj = req.body.sort === undefined ? {} : req.body.sort;
-      let page = req.body.page === undefined ? 1 : req.body.page; //numero de pagina a mostrar
-      let pageSize = req.body.pageSize === undefined ? 10 : req.body.pageSize;
-      let query = req.body.query === undefined ? {} : req.body.query;
-
-      const paginationResult = await User.paginate(query, { page: page, limit: pageSize, sort: sortObj, rol: '2' }).then();
-      let objpagination = { hasNextPage: paginationResult.hasNextPage, page: paginationResult.page, pageSize: paginationResult.limit, totalRows: paginationResult.totalDocs };
-      let objresults = paginationResult.docs;
-
-      let objResponse = {};
-      objResponse['pagination'] = objpagination;
-      objResponse['results'] = objresults;
-
-      res.status(200).json(objResponse);
-    }
-  } catch (e) {
-    console.log(e);
-  }
-});
-
-app.post('/getUsersFull', async (req, res) => {
-  try {
-    var code = validateToken(req);
-    if (code.code == 401) {
-      res.status(401).json({ code: '401', message: code.message });
-    } else if (code.code == 200) {
-      const result = await User.find({ fechaBaja: null, rol: '2' }).then();
-      let objResponse = {};
-      objResponse['results'] = result;
-      res.status(200).json(objResponse);
-    }
-  } catch (e) {
-    console.log(e);
-  }
-});
 
 /* Sistemas v2 - Inicio */
 
@@ -1468,7 +1084,7 @@ app.post('/updateS2v2',async (req, res) =>{
 
 });
 //// Endpoint para generar un saludo por post
-app.post('/hola', async (req, res) => {
+tambienapp.post('/hola', async (req, res) => {
 
 res.status(200).json({message: "hola"});
 });
@@ -2663,31 +2279,7 @@ app.post('/changepassword', async (req, res) => {
   }
 });
 
-app.post('/validationpassword', async (req, res) => {
-  var code = validateToken(req);
-  if (code.code == 401) {
-    res.status(401).json({ code: '401', message: code.message });
-  } else if (code.code == 200) {
-    try {
-      let id_usuario = req.body.id_usuario;
 
-      if (id_usuario == '') {
-        res.status(200).json({ message: 'Id Usuario requerido.', Status: 500 });
-        return false;
-      }
-
-      const result = await User.findById(id_usuario).exec();
-
-      if (result.contrasenaNueva === true) {
-        res.status(200).json({ message: 'Necesitas cambiar tu contraseña', Status: 500, contrasenaNueva: true, rol: result.rol, sistemas: result.sistemas, proveedor: result.proveedorDatos, estatus: result.estatus });
-      } else {
-        res.status(200).json({ message: 'Tu contraseña está al día.', Status: 200, contrasenaNueva: false, rol: result.rol, sistemas: result.sistemas, proveedor: result.proveedorDatos, estatus: result.estatus });
-      }
-    } catch (e) {
-      console.log(e);
-    }
-  }
-});
 
 app.post('/prueba', async (req, res) => {
   try {
