@@ -24,7 +24,7 @@ const Bitacora = require('./schemas/model.bitacora');
 const proveedorRegistros = require('./schemas/model.proveedorRegistros');
 const Provider = require('./schemas/model.proovedor');
 //// Schemas definidos para el capturador del s2v2 y s3v2
-const {nuevoS2Schema} =  require('./schemas/model.new.s2.js');
+const {nuevoS2Schema} =  require('./schemas/S2V2/model.new.s2.js');
 
 /* 
 Bibliotecas necesarias para utilizar jsonscheme para generar el modelo de mongoose
@@ -127,6 +127,54 @@ const encryptPassword = (password) => {
   // Get the encrypted value in hexadecimal format
   return hash.digest("hex");
 };
+
+function getArrayFormatTipoProcedimiento(array) {
+  _.each(array, function (p) {
+    p.clave = parseInt(p.clave);
+  });
+  return array;
+}
+
+var validateToken = function (req) {
+  var inToken = null;
+  var auth = req.headers['authorization'];
+
+  if (auth && auth.toLowerCase().indexOf('bearer') == 0) {
+    inToken = auth.slice('bearer '.length);
+  } else if (req.body && req.body.access_token) {
+    inToken = req.body.access_token;
+  } else if (req.query && req.query.access_token) {
+    inToken = req.query.access_token;
+  }
+  // invalid token - synchronous
+  try {
+    var decoded = jwt.verify(inToken, process.env.SEED);
+    return { code: 200, message: decoded };
+  } catch (err) {
+    // err
+    let error = '';
+    if (err.message === 'jwt must be provided') {
+      error = 'Error el token de autenticación (JWT) es requerido en el header, favor de verificar';
+    } else if (err.message === 'invalid signature' || err.message.includes('Unexpected token')) {
+      error = 'Error token inválido, el token probablemente ha sido modificado favor de verificar';
+    } else if (err.message === 'jwt expired') {
+      error = 'Sesión expirada';
+    } else {
+      error = err.message;
+    }
+    let obj = { code: 401, message: error };
+    return obj;
+  }
+};
+
+/* GET home page. */
+app.get('/', function(req, res, next) {
+  res.json({
+      version: 1.0,
+      title: 'API de Contrataciones'
+  });
+});
+
 
 /* 
     Funcioion para validarr la contraseña
@@ -720,27 +768,95 @@ app.post('/getAllS2v2', async (req, res) => {
       console.log(e);
     }
   });
-  //// update s2v2 from s2
-app.post('/updateS2v2',async (req, res) =>{  
-    const newdocument = req.body;
-    const usuario = req.body.usuario;
-    delete req.body.usuario;
-    newdocument['fechaActualizacion'] = moment().format();
+  //// update s2v2 from s2 // updateS2v2
 
-    Spic = S2.model('Spic', nuevoS2Schema, 'spic');
-    const spicDocument = await Spic.findOne({ usuario });
-
-    if (!spicDocument) {
-    res.status(404).send("No se encontró el registro de Spic");
-    
-  } else {
-    spicDocument.set(newdocument);
-    response = await spicDocument.save();
-    res.status(200).json({message:'Mensaje de actualizacion correcta', response});
-  }
-    
+  app.post('/updateS2v2/:id', async (req, res) => {
+    try {
+      var code = validateToken(req);
+      if (code.code !== 200) {
+        return res.status(code.code).json({ code: code.code.toString(), message: code.message });
+      }
   
+      const id = req.params.id.toString();
+      const values = req.body;
+      let newdocument = req.body;
+      // let newdocument = convertLevels(req.body);
+      // console.log(newdocument['fechaCaptura']);
+      let fecha = moment().tz("America/Mexico_City").format();
+      //newdocument['fechaCaptura'] = fecha;
+      newdocument['fechaActualizacion'] = fecha;
+      // Validar el objeto principal utilizando el esquema Yup
+      try {
+        await sSancionadosSchemaYupV2.validate(values);
+      } catch (error) {
+        // Si hay errores de validación, responder con el error
+        return res.status(400).json({ message: 'Error in validation', Status: 400, response: error });
+      }
+  
+      const sSancionadosS3V2 = S3S.model('ssancionados', sSancionadosSchemaV2, 'ssancionados');
+  
+      if (values._id) { 
+  
+          
+          //let resp = await proveedorRegistros1.save();
+          ////let proveedorRegistros = S2.model('proveedorRegistros', proveedorRegistrosSchemaV2, 'proveedorRegistros');
+          ////let proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: result._id, sistema: 'S2' });
+          //let proveedorRegistros1 = new proveedorRegistrosSchemaV2({ proveedorId: datausuario.proveedorDatos, registroSistemaId: result._id, sistema: 'S2' });
+          //console.log(proveedorRegistros1);
+          //console.log(datausuario);
+          proveedorRegistros1.fechaCaptura = moment().tz("America/Mexico_City").format();
+          let resp = await proveedorRegistros1.save();
+          //res.status(200).json({ code: '200', message: "iNSERTADO DESDES S2V2 fecha modificada", datausuario:datausuario, objeto:newdocument, datareq:req });
+          //let niveles = newdocument.nivelesResponsabilidad;
+          //console.log(niveles);
+        // Buscar y actualizar el documento por su _id
+        try {
+          //let response = await sSancionadosS3V2.findByIdAndUpdate(values._id, values, { upsert: true, new: true }).exec();
+          let response = await sSancionadosS3V2.findOneAndUpdate(
+            { _id: id },
+            values,
+            { new: true },
+            (err, data) => {
+              if (err) {
+                console.error("Error al actualizar el documento:", err);
+                res.status(500).json({ message: 'Error al actualizar el documento' });
+              } else if (!data) {
+                console.log("Documento no encontrado");
+                res.status(404).json({ message: 'Documento no encontrado' });
+              } else {
+                console.log("Documento actualizado correctamente:", data);
+                res.status(200).json({ message: 'Documento actualizado correctamente.', data: data });
+              }
+              console.log("endpoint de actualizar ejecutado correctamente");
+            }
+          );
+          // Respondemos con la respuesta exitosa
+          return res.status(200).json({ message: 'Operación realizada correctamente', Status: 200, response });
+        } catch (error) {
+          console.log(error);
+          return res.status(500).json({ message: 'Internal server error', Status: 500 });
+        }
+      } else {
+        // Si no se proporciona el _id, realizamos una nueva inserción
+        let esquema = new sSancionadosS3V2(values);
+        try {
+          let response = await esquema.save();
+          // Respondemos con la respuesta exitosa
+          return res.status(200).json({ message: 'Operación realizada correctamente', Status: 200, response });
+        } catch (error) {
+          console.log(error);
+          return res.status(500).json({ message: 'Internal server error', Status: 500 });
+        }
+      }
+    } catch (e) {
+      console.log(e);
+      return res.status(500).json({ message: 'Internal server error', Status: 500 });
+    }
   });
-  
+   
+  /* 
+      Endpoint para actualizar un documento de la coleccion ssancionados
+  */
+
   //************************************ Final API S2 V2.1 ****************************************************/  
 //------------------------------ final de los endpoints para el api del capturador S2  ------------------------------------------------------

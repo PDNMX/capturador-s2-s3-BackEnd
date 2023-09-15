@@ -7,7 +7,7 @@ const path = require('path');
 const Yup = require('yup');
 const User = require('./schemas/model.user');
 //variables para el s2 y s3
-const {nuevoS2Schema} = require('./schemas/model.new.s2.js');
+const {nuevoS2Schema} = require('./schemas/S2V2/model.new.s2.js/index.js');
 //const sSancionadosS3V2 = require('./schemas/model.new.s3.js');
 const { sSancionadosSchemaV2 } = require('./schemas/model.new.s3.js');
 const sSancionadosSchemaYupV2 = require('./schemas/model.new.S3.yup.schema.js');
@@ -87,44 +87,7 @@ let server = app.listen(port, function () {
   console.log(' function cloud Server is listening at http://%s:%s', host, port);
 });
 
-function getArrayFormatTipoProcedimiento(array) {
-  _.each(array, function (p) {
-    p.clave = parseInt(p.clave);
-  });
-  return array;
-}
 
-var validateToken = function (req) {
-  var inToken = null;
-  var auth = req.headers['authorization'];
-
-  if (auth && auth.toLowerCase().indexOf('bearer') == 0) {
-    inToken = auth.slice('bearer '.length);
-  } else if (req.body && req.body.access_token) {
-    inToken = req.body.access_token;
-  } else if (req.query && req.query.access_token) {
-    inToken = req.query.access_token;
-  }
-  // invalid token - synchronous
-  try {
-    var decoded = jwt.verify(inToken, process.env.SEED);
-    return { code: 200, message: decoded };
-  } catch (err) {
-    // err
-    let error = '';
-    if (err.message === 'jwt must be provided') {
-      error = 'Error el token de autenticación (JWT) es requerido en el header, favor de verificar';
-    } else if (err.message === 'invalid signature' || err.message.includes('Unexpected token')) {
-      error = 'Error token inválido, el token probablemente ha sido modificado favor de verificar';
-    } else if (err.message === 'jwt expired') {
-      error = 'Sesión expirada';
-    } else {
-      error = err.message;
-    }
-    let obj = { code: 401, message: error };
-    return obj;
-  }
-};
 
 async function registroBitacora(data) {
   let response;
@@ -337,7 +300,7 @@ app.post('/validateSchemaS3S', async (req, res) => {
     console.log(e);
   }
 });
-
+/* 
 app.post('/validateSchemaS3P', async (req, res) => {
   try {
     var code = validateToken(req);
@@ -425,7 +388,7 @@ app.post('/validateSchemaS3P', async (req, res) => {
     console.log(e);
   }
 });
-
+ */
 
 
 /* Sistemas v2 - Inicio */
