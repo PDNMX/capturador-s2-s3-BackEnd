@@ -1769,36 +1769,6 @@ app.post('/updateS2Schema', async (req, res) => {
 });
 
 
-app.post('/getUsersAll', async (req, res) => {
-  try {
-    var code = validateToken(req);
-    if (code.code == 401) {
-      res.status(401).json({ code: '401', message: code.message });
-    } else if (code.code == 200) {
-      const result = await User.find({ rol: '2' });
-      let objResponse = {};
-
-      try {
-        var strippedRows = _.map(result, function (row) {
-          if (row.apellidoDos === undefined) {
-            let rowExtend = _.extend({ label: row.nombre + ' ' + row.apellidoUno, value: row._id }, row.toObject());
-            return rowExtend;
-          } else {
-            let rowExtend = _.extend({ label: row.nombre + ' ' + row.apellidoUno + ' ' + row.apellidoDos, value: row._id }, row.toObject());
-            return rowExtend;
-          }
-        });
-      } catch (e) {
-        z
-        console.log(e);
-      }
-      objResponse['results'] = strippedRows;
-      res.status(200).json(objResponse);
-    }
-  } catch (e) {
-    console.log(e);
-  }
-});
 
 app.post('/getCatalogs', async (req, res) => {
   try {
