@@ -974,7 +974,7 @@ app.post('/listS2v2', async (req, res) => {
   /* 
       Endpoint para actualizar un documento de la coleccion ssancionados
   */
-app.put('/updatezS2v2/:id', async (req, res) => {
+app.put('/updateS2v2/:id', async (req, res) => {
   try {
     // const token = req.headers.authorization;
     // var code = validateToken(req);
