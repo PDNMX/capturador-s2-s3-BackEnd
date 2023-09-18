@@ -47,7 +47,7 @@ const { SMTPClient } = require('emailjs');
 var swaggerValidator = require('swagger-object-validator');
 var _ = require('underscore');
 var jwt = require('jsonwebtoken');
-const { esquemaS2, schemaUserCreate, schemaUser, schemaProvider } = require('./schemas/yup.esquemas');
+
 // import regeneratorRuntime from 'regenerator-runtime';
 // import { SMTPClient } from 'emailjs';
 

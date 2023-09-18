@@ -25,7 +25,8 @@ const proveedorRegistros = require('./schemas/model.proveedorRegistros');
 const Provider = require('./schemas/model.proovedor');
 //// Schemas definidos para el capturador del s2v2 y s3v2
 const {nuevoS2Schema} =  require('./schemas/S2V2/model.new.s2.js');
-
+//// Esquemas definidos v1
+const { esquemaS2, schemaUserCreate, schemaUser, schemaProvider } = require('./schemas/yup.esquemas');
 /* 
 Bibliotecas necesarias para utilizar jsonscheme para generar el modelo de mongoose
 */
