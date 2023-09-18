@@ -954,7 +954,7 @@ app.post('/insertS2v2', async (req, res) => {
   }
 });
 //// Endpoint para obtener todos los registros de la coleccion de S2
-app.post('/getAllS2v2', async (req, res) => {
+app.post('/getAllS2v2', async (req, res) => {post
   try {
     const Spic = S2.model('Spic', nuevoS2Schema, 'spic'); 
     const registros = await Spic.find().exec();
@@ -1047,7 +1047,7 @@ app.post('/updateS2v2',async (req, res) =>{
 
 });
 //// Endpoint para generar un saludo por post
-tambienapp.post('/hola', async (req, res) => {
+app.post('/hola', async (req, res) => {
 
 res.status(200).json({message: "hola"});
 });

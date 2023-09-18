@@ -278,6 +278,7 @@ app.post('/changepassword', async (req, res) => {
     console.log(e);
   }
 });
+
 ////%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Inicio endpoints para proveedores %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 /* 
     Endpoint para crear un nuevo proveedor
@@ -871,7 +872,7 @@ app.post('/getAllS2v2', async (req, res) => {
     }
   });
   //// Endpoint list s2v2 from s2
-app.post('/lists2v2', async (req, res) => {
+app.post('/listS2v2', async (req, res) => {
     try {
       //const token = req.headers.authorization;
       //var code = validateToken(req);
@@ -973,7 +974,7 @@ app.post('/lists2v2', async (req, res) => {
   /* 
       Endpoint para actualizar un documento de la coleccion ssancionados
   */
-app.post('/updatezS2v2/:id', async (req, res) => {
+app.put('/updatezS2v2/:id', async (req, res) => {
   try {
     // const token = req.headers.authorization;
     // var code = validateToken(req);
@@ -1008,6 +1009,8 @@ app.post('/updatezS2v2/:id', async (req, res) => {
 //------------------------------ final de los endpoints para el api del capturador S2  ------------------------------------------------------
 //++++++++++++++++++++++++++++++++++++++ Inicio API S3 V2  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 ///////////////////////////////////////////// S3S
-
+/* 
+  Endpoint para insertar en S3S
+*/
 
 //++++++++++++++++++++++++++++++++++++++ Fin API S3 V2  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
