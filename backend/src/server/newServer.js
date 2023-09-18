@@ -563,11 +563,12 @@ app.post('/create/user', async (req, res) => {
             attachment: [{ data: '<html><p>Buen día, anexamos tu credenciales para acceder al Sistema de Captura de Información:</p><br><p>Usuario: <code>' + newBody.usuario + '</code></p><br><p>Contraseña: <code>' + pass + '</code></p><br><br><p>Al iniciar sesión por primera vez deberás establecer una nueva contraseña</p></html>', alternative: true }]
           };
 
-          /* client.send(message, function (err, message) {
+          ///// Enviar correo indicando que se registró correctamente el usuario
+          client.send(message, function (err, message) {
             if (err != null) {
-              res.status(200).json({ message: 'Hay errores al enviar tu nueva contraseña. Ponte en contacto con el administrador.', Status: 500 });
+              res.status(400).json({ message: 'Hay errores al enviar tu nueva contraseña. Ponte en contacto con el administrador.', Status: 500 });
             }
-          }); */
+          }); 
 
           const nuevoUsuario = new User(newBody);
           let response;
@@ -879,7 +880,9 @@ app.post('/lists2v2', async (req, res) => {
         res.status(401).json({ code: '401', message: code.message });
       } else if (code.code == 200) {
         // Deshabilitar estas líneas debido a que las variables usuario y proveedorDatos no se utilizan
-        let usuario = await User.findById(req.body.usuario);
+        let idUser = req.body.idUser;
+        //let usuario = await User.findById(req.body.usuario);
+        let usuario = await User.findById(idUser);
         let proveedorDatos = usuario.proveedorDatos;
         let sistema = 'S2';
   
@@ -983,8 +986,7 @@ app.post('/updatezS2v2/:id', async (req, res) => {
     // Se eliminan los campos innecesarios de la solicitud
     delete req.params.id;
     // Se obtiene el nuevo documento a actualizar
-            let newdocument = req.body;
-      
+    let newdocument = req.body;  
             // Se establece la fecha de actualización
             newdocument['fechaActualizacion'] = moment().tz("America/Mexico_City").format();
       
