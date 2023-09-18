@@ -11,6 +11,7 @@ const fs = require('fs');
 var swaggerValidator = require('swagger-object-validator');
 var _ = require('underscore');
 var jwt = require('jsonwebtoken');
+const crypto = require("crypto");
 //// Biblioteca yup a consideracion para validaciones
 const Yup = require('yup');
 const User = require('./schemas/model.user');
@@ -191,6 +192,92 @@ app.post('/validationpassword', async (req, res) => {
   }
 });
 
+app.post('/resetpassword', async (req, res) => {
+  try {
+    let correo = req.body.correo;
+    const correoValidar = Yup.string().email().required();
+    const validacion = await correoValidar.isValid(correo);
+
+    if (validacion == false) {
+      res.status(200).json({ message: 'Correo electrónico inválido.', Status: 500 });
+      return false;
+    }
+
+    const estatus = await User.find({ correoElectronico: correo, estatus: false }).then();
+
+    if (estatus.length > 0) {
+      res.status(200).json({ message: 'El usuario está dado de baja en el sistema.', Status: 500 });
+      return false;
+    }
+
+    const result = await User.find({ correoElectronico: correo }).then();
+
+    if (result.length == 0) {
+      res.status(200).json({ message: 'El Correo electrónico que ingresaste no existe.', Status: 500 });
+      return false;
+    }
+
+    var generator = require('generate-password');
+
+    var password = generator.generate({
+      length: 8,
+      numbers: true,
+      symbols: true,
+      lowercase: true,
+      uppercase: true,
+      strict: true,
+      exclude: '_[]<>~´¬@^⌐«»°√α±÷©§'
+    });
+
+    const client = new SMTPClient({
+      user: process.env.EMAIL,
+      password: process.env.PASS_EMAIL,
+      host: process.env.HOST_EMAIL,
+      ssl: true
+    });
+
+    const message = {
+      text: 'Sistema de Captura de Información - PDN',
+      from: process.env.EMAIL,
+      to: correo,
+      subject: ' Sistema de Captura de Información - PDN',
+      attachment: [{ data: '<html><p>Buen día, anexamos tu contraseña para acceder al Sistema de Captura de Información:</p><br><p>Contraseña: <code></p></html>' + password + '</code><br><br></html>', alternative: true }]
+
+    };
+
+    // send the message and get a callback with an error or details of the message that was sent
+    client.send(message, function (err, message) {
+      if (err != null) {
+        res.status(200).json({ message: 'Hay errores al enviar tu nueva contraseña. Ponte en contacto con el administrador.', Status: 500 });
+      }
+    });
+    let fechaActual = moment();
+    password = encryptPassword(password);
+    const respuesta = await User.updateOne({ correoElectronico: correo }, { constrasena: password, contrasenaNueva: true, vigenciaContrasena: fechaActual.add(3, 'months').format().toString() });
+    res.status(200).json({ message: 'Se ha enviado tu nueva contraseña al correo electrónico proporcionado.', Status: 200 });
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+app.post('/changepassword', async (req, res) => {
+  try {
+    let constrasena = encryptPassword(req.body.constrasena);
+    let passwordConfirmation = encryptPassword(req.body.passwordConfirmation);
+    let id = req.body.user;
+
+    if (constrasena != passwordConfirmation) {
+      res.status(200).json({ message: 'Las contraseñas no coinciden.', Status: 500 });
+      return false;
+    }
+    let fechaActual = moment();
+
+    const result = await User.update({ _id: id }, { constrasena: constrasena, contrasenaNueva: false, vigenciaContrasena: fechaActual.add(3, 'months').format().toString() }).then();
+    res.status(200).json({ message: '¡Se ha actualizado tu contraseña!.', Status: 200 });
+  } catch (e) {
+    console.log(e);
+  }
+});
 ////%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Inicio endpoints para proveedores %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 /* 
     Endpoint para crear un nuevo proveedor
@@ -404,7 +491,7 @@ app.post('/create/user', async (req, res) => {
 
         var usuarioexiste = await User.find({ usuario: { $regex: new RegExp('^' + req.body.usuario, 'i') } }, { fechaBaja: { $eq: null } }).countDocuments();
         if (usuarioexiste === undefined) {
-          ucreatesuarioexiste = 0;
+          usuarioexiste = 0;
         }
 
         if (correoexiste > 0 || usuarioexiste > 0) {
@@ -429,7 +516,7 @@ app.post('/create/user', async (req, res) => {
           //// Aqui se crea el objeto json que se va a insertar en la base de datos
           let fechaActual = moment();
           let passHash = encryptPassword(pass);
-          console.log(passHash);
+          //console.log(passHash);
           let newBody = { ...req.body, contrasena: passHash, fechaAlta: fechaActual.format(), vigenciaContrasena: fechaActual.add(3, 'months').format().toString(), estatus: true };
 
           await schemaUserCreate.concat(schemaUser).validate({
@@ -476,11 +563,11 @@ app.post('/create/user', async (req, res) => {
             attachment: [{ data: '<html><p>Buen día, anexamos tu credenciales para acceder al Sistema de Captura de Información:</p><br><p>Usuario: <code>' + newBody.usuario + '</code></p><br><p>Contraseña: <code>' + pass + '</code></p><br><br><p>Al iniciar sesión por primera vez deberás establecer una nueva contraseña</p></html>', alternative: true }]
           };
 
-          client.send(message, function (err, message) {
+          /* client.send(message, function (err, message) {
             if (err != null) {
               res.status(200).json({ message: 'Hay errores al enviar tu nueva contraseña. Ponte en contacto con el administrador.', Status: 500 });
             }
-          });
+          }); */
 
           const nuevoUsuario = new User(newBody);
           let response;
