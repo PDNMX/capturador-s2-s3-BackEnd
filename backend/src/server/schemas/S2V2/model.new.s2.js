@@ -36,6 +36,7 @@ const nuevoS2Schema = new Schema({
   {
     tipo: { type: Schema.Types.Mixed },
     tipoArea: { type: Schema.Types.Mixed },
+    nivelesResponsabilidad: { type: Schema.Types.Mixed },
     areas:  { type: Schema.Types.Mixed }
   },
   observaciones: { type: String }

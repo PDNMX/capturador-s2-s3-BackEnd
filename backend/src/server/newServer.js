@@ -279,6 +279,138 @@ app.post('/changepassword', async (req, res) => {
   }
 });
 
+//.................................................... Inicio endpoints para los catalgos v1 ....................................................//
+
+app.post('/getCatalogs', async (req, res) => {
+  try {
+    var code = validateToken(req);
+    let docType = req.body.docType;
+    if (code.code == 401) {
+      res.status(401).json({ code: '401', message: code.message });
+    } else if (code.code == 200) {
+      const result = await Catalog.find({ docType: docType }).sort({ valor: 'ascending' }).then();
+      let objResponse = {};
+      let strippedRows;
+      if (
+        docType === 'genero' ||
+        docType === 'ramo' ||
+        docType === 'tipoArea' ||
+        docType === 'nivelResponsabilidad' ||
+        docType === 'tipoProcedimiento' ||
+        docType === 'tipoFalta' ||
+        docType === 'tipoSancion' ||
+        docType === 'moneda' ||
+        docType === 'tipoDocumento' ||
+        docType === 'tipoPersona' ||
+        docType === 'pais' ||
+        docType === 'estado' ||
+        docType === 'municipio' ||
+        docType === 'vialidad' ||
+        docType === 'tipoSancionS3P'
+      ) {
+        try {
+          strippedRows = _.map(result, function (row) {
+            let rowExtend = _.extend({ label: row.valor, value: JSON.stringify({ clave: row.clave, valor: row.valor }) }, row.toObject());
+            return rowExtend;
+          });
+        } catch (e) {
+          console.log(e);
+        }
+      } else if (docType === 'puesto') {
+        try {
+          strippedRows = _.map(result, function (row) {
+            let rowExtend = _.extend({ label: row.nombre, value: row.nivel }, row.toObject());
+            return rowExtend;
+          });
+        } catch (e) {
+          console.log(e);
+        }
+      }
+
+      objResponse['results'] = strippedRows;
+      res.status(200).json(objResponse);
+    }
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+app.post('/getCatalogsMunicipiosPorEstado', async (req, res) => {
+  try {
+    var code = validateToken(req);
+    let docType = 'municipio';
+    let idEstado = req.body.idEstado;
+    let objEstado;
+    try {
+      objEstado = JSON.parse(idEstado);
+    } catch (e) {
+      console.log(e);
+    }
+    if (code.code == 401) {
+      res.status(401).json({ code: '401', message: code.message });
+    } else if (code.code == 200) {
+      console.log({ docType: docType, cve_ent: objEstado.clave });
+      const result = await Catalog.find({ docType: docType, cve_ent: objEstado.clave }).sort({ valor: 'ascending' }).then();
+      let objResponse = {};
+      let strippedRows;
+
+      try {
+        strippedRows = _.map(result, function (row) {
+          let rowExtend = _.extend({ label: row.valor, value: JSON.stringify({ clave: row.clave, valor: row.valor }) }, row.toObject());
+          return rowExtend;
+        });
+      } catch (e) {
+        console.log(e);
+      }
+
+      objResponse['results'] = strippedRows;
+      res.status(200).json(objResponse);
+    }
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+app.post('/getCatalogsLocalidadesPorEstado', async (req, res) => {
+  try {
+    var code = validateToken(req);
+    let docType = 'localidad';
+    let idMunicipio = req.body.idMunicipio;
+    let idEntidad = req.body.idEntidad;
+    let objMunicipio;
+    let objEntidad;
+    try {
+      objMunicipio = JSON.parse(idMunicipio);
+      objEntidad = JSON.parse(idEntidad);
+    } catch (e) {
+      console.log(e);
+    }
+    if (code.code == 401) {
+      res.status(401).json({ code: '401', message: code.message });
+    } else if (code.code == 200) {
+      console.log({ docType: docType, cve_mun: objMunicipio.clave, cve_ent: objEntidad.clave });
+      const result = await Catalog.find({ docType: docType, cve_mun: objMunicipio.clave, cve_ent: objEntidad.clave }).sort({ valor: 'ascending' }).then();
+      let objResponse = {};
+      let strippedRows;
+
+      try {
+        strippedRows = _.map(result, function (row) {
+          let rowExtend = _.extend({ label: row.valor, value: JSON.stringify({ clave: row.clave, valor: row.valor }) }, row.toObject());
+          return rowExtend;
+        });
+      } catch (e) {
+        console.log(e);
+      }
+
+      objResponse['results'] = strippedRows;
+      res.status(200).json(objResponse);
+    }
+  } catch (e) {
+    console.log(e);
+  }
+});
+//.................................................... Final endpoints para los catalgos v1 ....................................................//
+
 ////%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Inicio endpoints para proveedores %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% */
 /* 
     Endpoint para crear un nuevo proveedor
@@ -938,40 +1070,7 @@ app.post('/listS2v2', async (req, res) => {
     }
 });
   //// update s2v2 from s2 // updateS2v2
-
-/* app.post('/updatezS2v2/:id', async (req, res) => {
-    try {
-      //const token = req.headers.authorization;
-      //var code = validateToken(req);
-      let code = validateToken(req);
-      if (code.code == 401) {
-        res.status(401).json({ code: '401', message: code.message });
-      } else if (code.code == 200) {
-      ///// Se obtiene el id del usuario que esta realizando la peticion
-      const id = req.params.id.toString();
-      delete req.params.id;
-      let newdocument = req.body;
-      //delete newdocument.id;
-      // let newdocument = convertLevels(req.body);
-      // console.log(newdocument['fechaCaptura']);
-      let fecha = moment().tz("America/Mexico_City").format();
-      //newdocument['fechaCaptura'] = fecha;
-      newdocument['fechaActualizacion'] = fecha;
-      ///// Se instancia el modelo de la coleccion de spic
-      let Spic = S2.model('Spic', nuevoS2Schema, 'spic');      
-      let esquema = new Spic(newdocument);
-
-      // await Spic.findByIdAndDelete(values._id);
-      response = await Spic.findByIdAndUpdate(id, esquema, { upsert: true, new: true }).exec();
-
-      res.status(200).json({ code: '200', message: 'Actualizando desde s2v2', id, newdocument });
-      }
-    } catch (e) {
-      console.log(e);
-    }
-}); */
-   
-  /* 
+  /*
       Endpoint para actualizar un documento de la coleccion ssancionados
   */
 app.put('/updateS2v2/:id', async (req, res) => {
