@@ -1,4 +1,3 @@
-
 const { Schema, model } = require('mongoose');
 const mongoosePaginate = require("mongoose-paginate-v2");
 
@@ -34,10 +33,21 @@ const nuevoS2Schema = new Schema({
   },
   procedimientos: 
   {
-    tipo: { type: Schema.Types.Mixed },
-    tipoArea: { type: Schema.Types.Mixed },
-    nivelesResponsabilidad: { type: Schema.Types.Mixed },
-    areas:  { type: Schema.Types.Mixed }
+    tipoArea: {
+      type: Schema.Types.Object,
+      properties: {
+        tipo: { type: String },
+        areas: { type: [String] }
+      }
+    },
+    nivelesResponsabilidad: {
+      type: Schema.Types.Object,
+      properties: {
+        idObj: { type: String },
+        acciones: { type: [String] }
+      }
+    },
+    tipo: { type: String }
   },
   observaciones: { type: String }
   

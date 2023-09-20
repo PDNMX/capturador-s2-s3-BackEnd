@@ -1073,7 +1073,8 @@ app.post('/listS2v2', async (req, res) => {
   /*
       Endpoint para actualizar un documento de la coleccion ssancionados
   */
-app.put('/updateS2v2/:id', async (req, res) => {
+ 
+app.put('/updateS2v2', async (req, res) => {
   try {
     // const token = req.headers.authorization;
     // var code = validateToken(req);
@@ -1082,9 +1083,10 @@ app.put('/updateS2v2/:id', async (req, res) => {
       res.status(401).json({ code: '401', message: code.message });
         } else if (code.code == 200) {
     // Se obtiene el id del usuario que esta realizando la peticion
-    const id = req.params.id.toString();
+    const id = req.body._id;
+    console.log(id);
     // Se eliminan los campos innecesarios de la solicitud
-    delete req.params.id;
+    delete req.body._id;
     // Se obtiene el nuevo documento a actualizar
     let newdocument = req.body;  
             // Se establece la fecha de actualización

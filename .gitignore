@@ -132,6 +132,6 @@ dist
 
 # No subidos por que están siendo evaluados
 ./backend/src/server/schemas/s2V2
-#./s2_s3_oficial/capturador-s2-s3-BackEnd/backend/src/server/schemas/S2V2
+#/capturador-s2-s3-BackEnd/backend/src/server/schemas/S2V2
 ./backend/src/server/schemas/S3V2
 ./backend/src/server/server_nousado.js
