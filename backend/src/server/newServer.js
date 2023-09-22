@@ -26,7 +26,9 @@ const proveedorRegistros = require('./schemas/model.proveedorRegistros');
 const Provider = require('./schemas/model.proovedor');
 //// Schemas definidos para el capturador del s2v2 y s3v2
 const {nuevoS2Schema} =  require('./schemas/S2V2/model.new.s2.js');
-const { s3SancionadosSchemaV2 } = require('./schemas/S3V2/model.new.s3s.js');
+//const { s3SancionadosSchemaV2 } = require('./schemas/S3V2/model.new.S3ServidoresFNOG.js');
+//const { s3SancionadosSchemaV2 } = require('./schemas/S3V2/model.new.s3s.js');
+//const { s3ParticularesSchemaV2 } = require('./schemas/S3V2/model.new.s3p.js');
 
 //// Esquemas definidos v1
 const { esquemaS2, schemaUserCreate, schemaUser, schemaProvider } = require('./schemas/yup.esquemas');
@@ -1004,7 +1006,8 @@ app.post('/getAllS2v2', async (req, res) => {
   
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: 'Error al obtener los registros' });
+      //res.status(500).json({ message: 'Error al obtener los registros' });
+      res.status(200).json(objResponse);
     }
   });
 /* 
@@ -1094,22 +1097,22 @@ app.put('/updateS2v2', async (req, res) => {
     delete req.body._id;
     // Se obtiene el nuevo documento a actualizar
     let newdocument = req.body;  
-            // Se establece la fecha de actualización
-            newdocument['fechaActualizacion'] = moment().tz("America/Mexico_City").format();
+    // Se establece la fecha de actualización
+    newdocument['fechaActualizacion'] = moment().tz("America/Mexico_City").format()
+    // Se instancia el modelo de la colección de spic
+    let Spic = S2.model('Spic', nuevoS2Schema, 'spic');
+    // Se actualiza el documento
+    const response = await Spic.findByIdAndUpdate(id, newdocument, { upsert: true, new: true }).exec();
       
-            // Se instancia el modelo de la colección de spic
-            let Spic = S2.model('Spic', nuevoS2Schema, 'spic');
-      
-            // Se actualiza el documento
-            const response = await Spic.findByIdAndUpdate(id, newdocument, { upsert: true, new: true }).exec();
-      
-            // Se devuelve la respuesta
-            res.status(200).json({ code: '200', message: 'Actualizando desde s2v2', id, newdocument });
-          }
-        } catch (e) {
+    // Se devuelve la respuesta
+    res.status(200).json({ code: '200', message: 'Actualizando desde s2v2', id, newdocument });
+    //res.status(200).json(objResponse);
+   //// regresamos una respuesta
+  }
+   } catch (e) {
           console.log(e);
-        }
-});
+  }
+});// res.status(200);
 
 //************************************ Final API S2 V2.1 ****************************************************/  
 //------------------------------ final de los endpoints para el api del capturador S2  ------------------------------------------------------
@@ -1128,7 +1131,8 @@ app.post('/insertS3Sv2', async (req, res) => {
     if (code.code == 401) {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
-      var usuario = req.body.usuario;
+      res.status(200).json({code:200, message: "Se inserto correctamente", data:req.body});
+    /*   var usuario = req.body.usuario;
       //// Se elimina el usuario del body
       delete req.body.usuario;
       // Utiliza el esquema de validación para verificar el JSON recibido
@@ -1152,45 +1156,14 @@ app.post('/insertS3Sv2', async (req, res) => {
       const proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: result._id, sistema: 'S3S', fechaCaptura:fecha, fechaActualizacion:fecha});      
       let resp = await proveedorRegistros1.save();
       
-      /*       res.status(200).json({ message: 'Se realizarón lrRegistros = S3S.model('proveedorRegistros', proveedorRegistros, 'proveedorRegistros');
-
-      //console.log(proveedorRegistros1);
-      //console.log(datausuario);
-      //proveedorRegistros1['fechaCaptura'] = moment().format();
-      let resp = await proveedorRegistros1.save(); */
-      /*
-      //console.log(newdocument);let newdocument = req.body;
-      newdocument.faltaGrave.fechaCaptura = moment().format();
-      newdocument.faltaGrave.id = 'FAKEID';
-      //console.log(newdocument); 
-      //// Se guarda el registro ssancionados en la base de datos
-      const sSancionadosS3V2 = S3S.model('ssancionados', sSancionadosSchemaV2,'ssancionados');//,'ssancionados');
-      const sSancionadosS3V2Ind = new sSancionadosS3V2(newdocument);
-      //// Si el JSON recibido es válido, puedes continuar con la operación de guardado en MongoDB
-      let response = await sSancionadosS3V2Ind.save();
-      // A su vez insertamos el proovedor de datos asociado con el usuario
-      let datausuario = await User.findById(usuario);
-      let proveedorRegistros = S3S.model('proveedorRegistros', proveedorRegistrosSchemaV2, 'proveedorRegistros');
-      let proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: datausuario._id, sistema: 'S3S' });
-      //console.log(proveedorRegistros1);
-      //console.log(datausuario);
-      proveedorRegistros.fechaCaptura = moment().format();
-      let resp = await proveedorRegistros1.save();
-      //console.log(newdocument);
-      //console.log();
-      res.status(200).json({ message: 'Se realizarón las inserciones correctamente', Status: 200, response: newdocument, usuario: usuario,  datausuario:datausuario, proveedorRegistros1_1:proveedorRegistros1 });
-
-      //console.log();
-     
- */
       res.status(200).json({ message: 'Se realizarón las inserciones correctamente pero aqui sigo', Status: 200, response: newdocument });
       //res.status(200).json({ message: 'Se realizarón las inserciones correctamente', Status: 200, usuario: usuario, datausuario: datausuario, objResponse: objResponse });//, response:response});//, response: newdocument, usuario: usuario,  datausuario:datausuario, proveedorRegistros1_1:proveedorRegistros1 });
-    }
+    */}
   } catch (e) {
     console.log(e);
-  }
+  } 
 });
-/* 
+  /*
   Endpoint para listar de ssancionados
 */
 app.post('/listS3Sv2', async (req, res) => {
@@ -1199,8 +1172,9 @@ app.post('/listS3Sv2', async (req, res) => {
     if (code.code == 401) {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
-      res.status(200).json({message: 'Listando desde s3sv2', data:req.body});
-    /*   var usuario = await User.findById(req.body.idUser);
+    //// Se obtiene la información del usuario que esta realizando la petición
+      res.status(200).json({code:200, message: "Listando desde s3pv2", data:req.body});
+    /*    var usuario = await User.findById(req.body.idUser);
       var proveedorDatos = usuario.proveedorDatos;
       var sistema = 'S3S';
       const result = await proveedorRegistros.find({ sistema: sistema, proveedorId: proveedorDatos }).then();
@@ -1209,7 +1183,7 @@ app.post('/listS3Sv2', async (req, res) => {
         arrs3s.push(row.registroSistemaId);
       });
 
-      let sancionados = S3S.model('Ssancionados', sSancionadosSchemaV2, 'ssancionados');
+      let sancionados = S3S.model('Ssancionados', s3SancionadosSchemaV2, 'ssancionados');
       let sortObj = req.body.sort === undefined ? {} : req.body.sort;
       let page = req.body.page === undefined ? 1 : req.body.page; //numero de pagina a mostrar
       let pageSize = req.body.pageSize === undefined ? 10 : req.body.pageSize;
@@ -1246,6 +1220,18 @@ app.put('/updateS3Sv2', async (req, res) => {
     if (code.code == 401) {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
+     /*  const id = req.body._id;
+      console.log(id);
+      // Se eliminan los campos innecesarios de la solicitud
+      delete req.body._id;
+      // Se obtiene el nuevo documento a actualizar
+      let newdocument = req.body;  
+      // Se establece la fecha de actualización
+      newdocument['fechaActualizacion'] = moment().tz("America/Mexico_City").format()
+
+      
+      const sSancionadosS3V2 = S3S.model('ssancionados', sSancionadosSchemaV2, 'ssancionados');
+ */
       res.status(200).json({message: 'actualizando desde s3pv2', data:req.body});
     }
   }
@@ -1264,7 +1250,7 @@ app.post('/insertS3Pv2', async (req, res) => {
     if (code.code == 401) {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
-      var usuario = req.body.usuario;
+      /* var usuario = req.body.usuario;
       //// Se elimina el usuario del body
       delete req.body.usuario;
       // Utiliza el esquema de validación para verificar el JSON recibido
@@ -1288,7 +1274,7 @@ app.post('/insertS3Pv2', async (req, res) => {
       //console.log(proveedorRegistros1);
       //console.log(datausuario);
       //proveedorRegistros1['fechaCaptura'] = moment().format();
-      let resp = await proveedorRegistros1.save();
+      let resp = await proveedorRegistros1.save(); */
       /*
       //console.log(newdocument);let newdocument = req.body;
       newdocument.faltaGrave.fechaCaptura = moment().format();
@@ -1314,7 +1300,8 @@ app.post('/insertS3Pv2', async (req, res) => {
       //console.log();
       res.status(200).json({ message: 'Se realizarón las inserciones correctamente', Status: 200, response: newdocument, usuario: usuario,  datausuario:datausuario, proveedorRegistros1_1:proveedorRegistros1 });
  */
-      res.status(200).json({ message: 'Se realizarón las inserciones correctamente insertS3Pv2', Status: 200, usuario: usuario, datausuario: datausuario, objResponse: objResponse });//, response:response});//, response: newdocument, usuario: usuario,  datausuario:datausuario, proveedorRegistros1_1:proveedorRegistros1 });
+      res.status(200).json({code:200, message: "Se inserto correctamente", data:req.body});
+      //res.status(200).json({ message: 'Se realizarón las inserciones correctamente insertS3Pv2', Status: 200, usuario: usuario, datausuario: datausuario, objResponse: objResponse });//, response:response});//, response: newdocument, usuario: usuario,  datausuario:datausuario, proveedorRegistros1_1:proveedorRegistros1 });
     }
   } catch (e) {
     console.log(e);
