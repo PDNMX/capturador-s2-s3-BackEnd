@@ -1173,8 +1173,8 @@ app.post('/listS3Sv2', async (req, res) => {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
     //// Se obtiene la información del usuario que esta realizando la petición
-      res.status(200).json({code:200, message: "Listando desde s3pv2", data:req.body});
-    /*    var usuario = await User.findById(req.body.idUser);
+    res.status(200).json({"pagination":{"hasNextPage":false,"page":1,"pageSize":10,"totalRows":0},"results":[]});
+     /* var usuario = await User.findById(req.body.idUser);
       var proveedorDatos = usuario.proveedorDatos;
       var sistema = 'S3S';
       const result = await proveedorRegistros.find({ sistema: sistema, proveedorId: proveedorDatos }).then();
@@ -1317,7 +1317,9 @@ app.post('/listS3Pv2', async (req, res) => {
     if (code.code == 401) {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
-      res.status(200).json({message: 'actualizando desde listS3Pv2', data:req.body});
+      res.status(200).json({"pagination":{"hasNextPage":false,"page":1,"pageSize":10,"totalRows":0},"results":[]});
+
+      //res.status(200).json({message: 'actualizando desde listS3Pv2', data:req.body});
     }
   }
   catch (e) {
