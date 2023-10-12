@@ -12,6 +12,7 @@ var swaggerValidator = require('swagger-object-validator');
 var _ = require('underscore');
 var jwt = require('jsonwebtoken');
 const crypto = require("crypto");
+const joi = require('joi');
 //// Biblioteca yup a consideracion para validaciones
 const Yup = require('yup');
 const User = require('./schemas/model.user');
@@ -26,10 +27,11 @@ const proveedorRegistros = require('./schemas/model.proveedorRegistros');
 const Provider = require('./schemas/model.proovedor');
 //// Schemas definidos para el capturador del s2v2 y s3v2
 const {nuevoS2Schema} =  require('./schemas/S2V2/model.new.s2.js');
-//const { s3SancionadosSchemaV2 } = require('./schemas/S3V2/model.new.S3ServidoresFNOG.js');
-//const { s3SancionadosSchemaV2 } = require('./schemas/S3V2/model.new.s3s.js');
-//const { s3ParticularesSchemaV2 } = require('./schemas/S3V2/model.new.s3p.js');
-
+const { s3SancionadosSchemaV2 } = require('./schemas/S3V2/S3S/model.new.joyS3Servidores.js');
+const { p3SancionadosSchemaV2 } = require('./schemas/S3V2/S3P/model.new.S3P.js');
+const { s3ServidoreschemaGraves, s3ServidoreschemaNoGraves } = require('./schemas/S3V2/S3S/model.new.S3S.js');
+///// Schemas para validar los datos recibidos del capturador
+const JoiSchemaS2 = require('./schemas/S2V2/model.joynew.s2.js'); 
 //// Esquemas definidos v1
 const { esquemaS2, schemaUserCreate, schemaUser, schemaProvider } = require('./schemas/yup.esquemas');
 /* 
@@ -118,7 +120,7 @@ var validateToken = function (req) {
         error = err.message;
       }
       let obj = { code: 401, message: error };
-      return obj;
+      return obj;2
     }
   };
 
@@ -912,8 +914,22 @@ app.post('/prueba', async (req, res) => {
       if (code.code == 401) {
         res.status(401).json({ code: '401', message: code.message });
       } else if (code.code == 200) {
-        res.status(200).json({ message: 'prueba con resultado correcto para el s3 y el s2 desde el archivo limpio.', Status: 200 });
-        console.log("prueba ejecutada correctamente desde newserverjs")
+
+        /* 
+          Probando validador
+        */
+     /*    
+       const validate = JoiSchemaS2.validate(req.body);
+
+        if (validate.error) {
+          // El JSON no es válido
+          console.log(validate.error);
+        } else {
+          console.log("El JSON es válido");
+        } */
+        
+        res.status(200).json({ message: 'Haz llamado el endpoint prueba con exito.', Status: 200, data: req.body });
+        //console.log("prueba ejecutada correctamente desde newserverjs")
       }
     } catch (e) {
       console.log(e);
@@ -951,45 +967,53 @@ app.post('/insertS2v2', async (req, res) => {
   /* 
    En este bloque de codigo se inserta en la base de datos S2 en la coleccion de SPIC
   */
+        const validate = JoiSchemaS2.validate(req.body);
+
+        if (validate.error) {
+          // El JSON no es válido
+          console.log(validate.error);
+        } else { 
+          // El JSON es válido
+          //console.log("El JSON es válido");
+          let usuario = req.body.usuario;
+          delete req.body.usuario;
+          let newdocument = req.body;
+          // let newdocument = convertLevels(req.body);
+          // console.log(newdocument['fechaCaptura']);
+          let fecha = moment().tz("America/Mexico_City").format();
+          newdocument['fechaCaptura'] = fecha;
+          newdocument['fechaActualizacion'] = fecha;
+          // let n = newdocument['fechaCaptura'];
+          // console.log(newdocument);
+          /* if (newdocument.segundoApellido == null || newdocument.segundoApellido == '' || newdocument.segundoApellido == 'undefined') {
+            newdocument['segundoApellido'] = false;
+          }  */
+          //console.log(newdocument);
+          // Se guarda el registro ssancionados en la base de datos
+          let Spic = S2.model('Spic', nuevoS2Schema, 'spic');      
+          let esquema = new Spic(newdocument);
+          //console.log(esquema);
+          const result = await esquema.save();
+          //const result = await Spic.create(newdocument);
+          //console.log(newdocument);
+          ///// Hasta este punto se inserta en spin de S2
+          // const result = await esquema.insertOne(newdocument);
+          let objResponse = {};
+          objResponse['results'] = result; 
+     /*
+      En este bloque de codigo se inserta en la base de datos administracionUsuarios en la coleccion de proveedorDatos
+     */
+          let datausuario = await User.findById(usuario);
+          const proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: result._id, sistema: 'S2', fechaCaptura:fecha, fechaActualizacion:fecha });
+          let resp = await proveedorRegistros1.save();
+          // console.log(result._id,);
+          // console.log(datausuario.proveedorDatos);        
+          //recibidos:newdocument});
+          res.status(200).json({code:200,message:"se inserto correctamente", resultado:result}); 
+          //res.status(200).json({objResponse});
+        }
        ///// Se obtiene el id del usuario que esta realizando la peticion
-       let usuario = req.body.usuario;
-       delete req.body.usuario;
-       let newdocument = req.body;
-       // let newdocument = convertLevels(req.body);
-       // console.log(newdocument['fechaCaptura']);
-       let fecha = moment().tz("America/Mexico_City").format();
-       newdocument['fechaCaptura'] = fecha;
-       newdocument['fechaActualizacion'] = fecha;
-       // let n = newdocument['fechaCaptura'];
-       // console.log(newdocument);
-       /* if (newdocument.segundoApellido == null || newdocument.segundoApellido == '' || newdocument.segundoApellido == 'undefined') {
-         newdocument['segundoApellido'] = false;
-       }  */
-       // Se guarda el registro ssancionados en la base de datos
-       let Spic = S2.model('Spic', nuevoS2Schema, 'spic');      
-       let esquema = new Spic(newdocument);
-       //console.log(esquema);
-       const result = await esquema.save();
-       // const result = await Spic.create(newdocument);ñ
-       ///// Hasta este punto se inserta en spin de S2
-       // const result = await esquema.insertOne(newdocument);
-       let objResponse = {};
-       objResponse['results'] = result; 
-  /*
-   En este bloque de codigo se inserta en la base de datos administracionUsuarios en la coleccion de proveedorDatos
-  */
-       let datausuario = await User.findById(usuario);
-       const proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: result._id, sistema: 'S2', fechaCaptura:fecha, fechaActualizacion:fecha });
-       let resp = await proveedorRegistros1.save();
-       // console.log(result._id,);
-       // console.log(datausuario.proveedorDatos);      
-  /* 
-       
-  */     
-       
-       //recibidos:newdocument});
-       //res.status(200).json({code:200,message:"se inserto correctamente", resultado:proveedorRegistros1}); 
-       res.status(200).json({objResponse});
+     
        //res.status(200).json({code:200,message:"se inserto correctamente esta prueba", recibidos:newdocument});
       }
     } catch (e) {
@@ -1092,7 +1116,7 @@ app.put('/updateS2v2', async (req, res) => {
         } else if (code.code == 200) {
     // Se obtiene el id del usuario que esta realizando la peticion
     const id = req.body._id;
-    console.log(id);
+    //console.log(id);
     // Se eliminan los campos innecesarios de la solicitud
     delete req.body._id;
     // Se obtiene el nuevo documento a actualizar
@@ -1102,7 +1126,7 @@ app.put('/updateS2v2', async (req, res) => {
     // Se instancia el modelo de la colección de spic
     let Spic = S2.model('Spic', nuevoS2Schema, 'spic');
     // Se actualiza el documento
-    const response = await Spic.findByIdAndUpdate(id, newdocument, { upsert: true, new: true }).exec();
+    const response = await Spic.findByIdAndUpdate(id, newdocument, { upsert: false, new: true }).exec();
       
     // Se devuelve la respuesta
     res.status(200).json({ code: '200', message: 'Actualizando desde s2v2', id, newdocument });
@@ -1131,8 +1155,7 @@ app.post('/insertS3Sv2', async (req, res) => {
     if (code.code == 401) {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
-      res.status(200).json({code:200, message: "Se inserto correctamente", data:req.body});
-    /*   var usuario = req.body.usuario;
+      let usuario = req.body.usuario;
       //// Se elimina el usuario del body
       delete req.body.usuario;
       // Utiliza el esquema de validación para verificar el JSON recibido
@@ -1140,10 +1163,12 @@ app.post('/insertS3Sv2', async (req, res) => {
       let fecha = moment().tz("America/Mexico_City").format();
       newdocument['fechaCaptura'] = fecha;
       newdocument['fechaActualizacion'] = fecha;
-      //console.log(newdocument);
+      console.log(newdocument);
       //// Se guarda el registro ssancionados en la base de datos
-      const sSancionadosS3SV2 = S3S.model('Ssancionados', s3SancionadosSchemaV2, 'ssancionados');//,'ssancionados');
+      //console.log("funcionando...")
+      const sSancionadosS3SV2 = S3S.model('Ssancionados', s3ServidoreschemaGraves, 'ssancionados');//,'ssancionados');
       const sSancionadosS3SV2Ind = new sSancionadosS3SV2(newdocument);
+      console.log(sSancionadosS3SV2Ind);
       //// Si el JSON recibido es válido, puedes continuar con la operación de guardado en MongoDB
       const result = await sSancionadosS3SV2Ind.save();
       //console.log(result);
@@ -1154,13 +1179,14 @@ app.post('/insertS3Sv2', async (req, res) => {
       let datausuario = await User.findById(usuario);
       //console.log(datausuario);
       const proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: result._id, sistema: 'S3S', fechaCaptura:fecha, fechaActualizacion:fecha});      
-      let resp = await proveedorRegistros1.save();
+      let resp = await proveedorRegistros1.save(); 
       
-      res.status(200).json({ message: 'Se realizarón las inserciones correctamente pero aqui sigo', Status: 200, response: newdocument });
+      res.status(200).json({ message: 'Se realizarón las inserciones correctamente del s3sv2 y todos felices', Status: 200, response: newdocument });
       //res.status(200).json({ message: 'Se realizarón las inserciones correctamente', Status: 200, usuario: usuario, datausuario: datausuario, objResponse: objResponse });//, response:response});//, response: newdocument, usuario: usuario,  datausuario:datausuario, proveedorRegistros1_1:proveedorRegistros1 });
-    */}
+    }
   } catch (e) {
-    console.log(e);
+    //console.log(e);
+    res.status(400).json({ Status: 400});
   } 
 });
   /*
@@ -1168,22 +1194,24 @@ app.post('/insertS3Sv2', async (req, res) => {
 */
 app.post('/listS3Sv2', async (req, res) => {
   try {
-    var code = validateToken(req);
+    let code = validateToken(req);
     if (code.code == 401) {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
     //// Se obtiene la información del usuario que esta realizando la petición
-    res.status(200).json({"pagination":{"hasNextPage":false,"page":1,"pageSize":10,"totalRows":0},"results":[]});
-     /* var usuario = await User.findById(req.body.idUser);
-      var proveedorDatos = usuario.proveedorDatos;
-      var sistema = 'S3S';
+    //// Regresa un json vacío
+    //res.status(200).json({"pagination":{"hasNextPage":false,"page":1,"pageSize":10,"totalRows":0},"results":[]});
+      let usuario = await User.findById(req.body.idUser);
+      console.log
+      let proveedorDatos = usuario.proveedorDatos;
+      let sistema = 'S3S';
       const result = await proveedorRegistros.find({ sistema: sistema, proveedorId: proveedorDatos }).then();
-      var arrs3s = [];
+      let arrs3s = [];
       _.map(result, row => {
         arrs3s.push(row.registroSistemaId);
       });
 
-      let sancionados = S3S.model('Ssancionados', s3SancionadosSchemaV2, 'ssancionados');
+      let sancionados = S3S.model('Ssancionados', s3ServidoreschemaGraves, 'ssancionados');
       let sortObj = req.body.sort === undefined ? {} : req.body.sort;
       let page = req.body.page === undefined ? 1 : req.body.page; //numero de pagina a mostrar
       let pageSize = req.body.pageSize === undefined ? 10 : req.body.pageSize;
@@ -1204,10 +1232,11 @@ app.post('/listS3Sv2', async (req, res) => {
       objResponse['pagination'] = objpagination;
       objResponse['results'] = objresults;
 
-      res.status(200).json(objResponse); */
+      res.status(200).json(objResponse);
     }
   } catch (e) {
-    console.log(e);
+    //console.log(e);
+    res.status(400).json({ Status: 400 });
   }
 });
 
@@ -1220,23 +1249,33 @@ app.put('/updateS3Sv2', async (req, res) => {
     if (code.code == 401) {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
-     /*  const id = req.body._id;
-      console.log(id);
+      //console.log(req.body);
+      const id = req.body._id;
+      //console.log(id.toString());
       // Se eliminan los campos innecesarios de la solicitud
       delete req.body._id;
       // Se obtiene el nuevo documento a actualizar
       let newdocument = req.body;  
       // Se establece la fecha de actualización
-      newdocument['fechaActualizacion'] = moment().tz("America/Mexico_City").format()
-
-      
-      const sSancionadosS3V2 = S3S.model('ssancionados', sSancionadosSchemaV2, 'ssancionados');
- */
-      res.status(200).json({message: 'actualizando desde s3pv2', data:req.body});
+      newdocument['fechaActualizacion'] = moment().tz("America/Mexico_City").format();
+      let sancionados = S3S.model('Ssancionados', s3ServidoreschemaGraves, 'ssancionados');
+      await sancionados.findByIdAndDelete(id);
+      /* response = await sancionados.findByIdAndUpdate(id, newdocument, {
+          upsert: true,
+          new: true,
+        })
+        .exec(); */
+      const response = await sancionados.findByIdAndUpdate(id, newdocument, { upsert: true, new: true }).exec();
+      let objResponse = {};
+      objResponse['results'] = response;
+      res.status(200).json(objResponse);
+      //res.status(200).json({ code: '200', message: 'Actualizando desde s3sv2', id, newdocument });
+      //res.status(200).json({message: 'actualizando desde s3pv2', data:req.body});
     }
   }
   catch (e) {
     console.log(e);
+    //res.status(400).json({ Status: 400, objResponse });
   }
 });
 
@@ -1250,7 +1289,7 @@ app.post('/insertS3Pv2', async (req, res) => {
     if (code.code == 401) {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
-      /* var usuario = req.body.usuario;
+      let usuario = req.body.usuario;
       //// Se elimina el usuario del body
       delete req.body.usuario;
       // Utiliza el esquema de validación para verificar el JSON recibido
@@ -1260,47 +1299,23 @@ app.post('/insertS3Pv2', async (req, res) => {
       newdocument['fechaActualizacion'] = fecha;
       //console.log(newdocument);
       //// Se guarda el registro ssancionados en la base de datos
-      const sSancionadosS3V2 = S3P.model('Ssancionados', sSancionadosSchemaV2, 'ssancionados');//,'ssancionados');
-      const sSancionadosS3V2Ind = new sSancionadosS3V2(newdocument);
+      //console.log(newdocument);
+      const pSancionadosS3PV2 = S3P.model('Psancionados', p3SancionadosSchemaV2, 'psancionados');//,'ssancionados');
+      const pSancionadosS3PV2Ind = new pSancionadosS3PV2(newdocument);
       //// Si el JSON recibido es válido, puedes continuar con la operación de guardado en MongoDB
-      const result = await sSancionadosS3V2Ind.save();
+      const result = await pSancionadosS3PV2Ind.save();
+      console.log(result);
       //// se declara el objeto de respuesta
       let objResponse = {};
       objResponse['results'] = result;
       //// A su vez insertamos el proovedor de datos asociado con el usuario
       let datausuario = await User.findById(usuario);
-      //let proveedorRegistros = S3S.model('proveedorRegistros', proveedorRegistros, 'proveedorRegistros');
-      let proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: result._id, sistema: 'S3P', fechaCaptura:fecha, fechaActualizacion:fecha});
-      //console.log(proveedorRegistros1);
       //console.log(datausuario);
-      //proveedorRegistros1['fechaCaptura'] = moment().format();
-      let resp = await proveedorRegistros1.save(); */
-      /*
-      //console.log(newdocument);let newdocument = req.body;
-      newdocument.faltaGrave.fechaCaptura = moment().format();
-      newdocument.faltaGrave.id = 'FAKEID';
-      //console.log(newdocument); 
-      //// Se guarda el registro ssancionados en la base de datos
-      const sSancionadosS3V2 = S3S.model('ssancionados', sSancionadosSchemaV2,'ssancionados');//,'ssancionados');
-      const sSancionadosS3V2Ind = new sSancionadosS3V2(newdocument);
-      //// Si el JSON recibido es válido, puedes continuar con la operación de guardado en MongoDB
-      let response = await sSancionadosS3V2Ind.save();
-      // A su vez insertamos el proovedor de datos asociado con el usuario
-      let datausuario = await User.findById(usuario);
-      let proveedorRegistros = S3S.model('proveedorRegistros', proveedorRegistrosSchemaV2, 'proveedorRegistros');
-      let proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: datausuario._id, sistema: 'S3S' });
-      //console.log(proveedorRegistros1);
-      //console.log(datausuario);
-      proveedorRegistros.fechaCaptura = moment().format();
+      const proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: result._id, sistema: 'S3S', fechaCaptura:fecha, fechaActualizacion:fecha});      
       let resp = await proveedorRegistros1.save();
-      //console.log(newdocument);
-      //console.log();
-      res.status(200).json({ message: 'Se realizarón las inserciones correctamente', Status: 200, response: newdocument, usuario: usuario,  datausuario:datausuario, proveedorRegistros1_1:proveedorRegistros1 });
-
-      //console.log();
-      res.status(200).json({ message: 'Se realizarón las inserciones correctamente', Status: 200, response: newdocument, usuario: usuario,  datausuario:datausuario, proveedorRegistros1_1:proveedorRegistros1 });
- */
-      res.status(200).json({code:200, message: "Se inserto correctamente", data:req.body});
+      
+      res.status(200).json({ message: 'Se realizarón las inserciones correctamente', objResponse });
+      //res.status(200).json({ message: 'Se realizarón las inserciones correctamente', Status: 200, usuario: usuario, datausuario: datausuario, objResponse: objResponse });//, response:response});//, response: newdocument, usuario: usuario,  datausuario:datausuario, proveedorRegistros1_1:proveedorRegistros1 });      res.status(200).json({code:200, message: "Se inserto correctamente", data:req.body});
       //res.status(200).json({ message: 'Se realizarón las inserciones correctamente insertS3Pv2', Status: 200, usuario: usuario, datausuario: datausuario, objResponse: objResponse });//, response:response});//, response: newdocument, usuario: usuario,  datausuario:datausuario, proveedorRegistros1_1:proveedorRegistros1 });
     }
   } catch (e) {
@@ -1317,9 +1332,40 @@ app.post('/listS3Pv2', async (req, res) => {
     if (code.code == 401) {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
-      res.status(200).json({"pagination":{"hasNextPage":false,"page":1,"pageSize":10,"totalRows":0},"results":[]});
+      //// Se obtiene la información del usuario que esta realizando la petición
+      let usuario = await User.findById(req.body.idUser);
+      let proveedorDatos = usuario.proveedorDatos;
+      let sistema = 'S3P';
+      const result = await proveedorRegistros.find({ sistema: sistema, proveedorId: proveedorDatos }).then();
+      let arrs3s = [];
+      _.map(result, row => {
+        arrs3s.push(row.registroSistemaId);
+      });
 
-      //res.status(200).json({message: 'actualizando desde listS3Pv2', data:req.body});
+      let sancionados = S3P.model('Psancionados', p3SancionadosSchemaV2FNOG, 'psancionados');
+      let sortObj = req.body.sort === undefined ? {} : req.body.sort;
+      let page = req.body.page === undefined ? 1 : req.body.page; //numero de pagina a mostrar
+      let pageSize = req.body.pageSize === undefined ? 10 : req.body.pageSize;
+      let query = req.body.query === undefined ? {} : req.body.query;
+      if (!query._id) {
+        if (arrs3s.length > 0) {
+          query = { ...query, _id: { $in: arrs3s } };
+        } else {
+          query = { _id: { $in: arrs3s } };
+        }
+      }
+
+      const paginationResult = await sancionados.paginate(query, { page: page, limit: pageSize, sort: sortObj }).then();
+      let objpagination = { hasNextPage: paginationResult.hasNextPage, page: paginationResult.page, pageSize: paginationResult.limit, totalRows: paginationResult.totalDocs };
+      let objresults = paginationResult.docs;
+
+      let objResponse = {};
+      objResponse['pagination'] = objpagination;
+      objResponse['results'] = objresults;
+
+      res.status(200).json(objResponse);
+      //// Regresa un json vacio con las opciones de paginacion
+      //res.status(200).json({"pagination":{"hasNextPage":false,"page":1,"pageSize":10,"totalRows":0},"results":[]});
     }
   }
   catch (e) {

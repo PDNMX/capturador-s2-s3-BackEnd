@@ -135,3 +135,5 @@ dist
 #/capturador-s2-s3-BackEnd/backend/src/server/schemas/S2V2
 ./backend/src/server/schemas/S3V2
 ./backend/src/server/server_nousado.js
+./backend/src/server/schemas/S2V2/S2jsonSchema.jsx
+./backend/src/server/schemas/S3V2/S3SjsonSchema.jsx
