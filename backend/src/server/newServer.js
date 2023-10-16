@@ -983,6 +983,8 @@ app.post('/insertS2v2', async (req, res) => {
           let fecha = moment().tz("America/Mexico_City").format();
           newdocument['fechaCaptura'] = fecha;
           newdocument['fechaActualizacion'] = fecha;
+          dataS2v2 = newdocument;
+          
           // let n = newdocument['fechaCaptura'];
           // console.log(newdocument);
           /* if (newdocument.segundoApellido == null || newdocument.segundoApellido == '' || newdocument.segundoApellido == 'undefined') {
