@@ -983,7 +983,7 @@ app.post('/insertS2v2', async (req, res) => {
           let fecha = moment().tz("America/Mexico_City").format();
           newdocument['fechaCaptura'] = fecha;
           newdocument['fechaActualizacion'] = fecha;
-          dataS2v2 = newdocument;
+          
           
           // let n = newdocument['fechaCaptura'];
           // console.log(newdocument);
@@ -996,6 +996,9 @@ app.post('/insertS2v2', async (req, res) => {
           let esquema = new Spic(newdocument);
           //console.log(esquema);
           const result = await esquema.save();
+          let id_result = result._id;
+          console.log(id_result);
+          
           //const result = await Spic.create(newdocument);
           //console.log(newdocument);
           ///// Hasta este punto se inserta en spin de S2
