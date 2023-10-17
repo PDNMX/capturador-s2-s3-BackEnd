@@ -1168,14 +1168,23 @@ app.post('/insertS3Sv2', async (req, res) => {
       let fecha = moment().tz("America/Mexico_City").format();
       newdocument['fechaCaptura'] = fecha;
       newdocument['fechaActualizacion'] = fecha;
-      console.log(newdocument);
+      //console.log(newdocument);
       //// Se guarda el registro ssancionados en la base de datos
       //console.log("funcionando...")
-      const sSancionadosS3SV2 = S3S.model('Ssancionados', s3ServidoreschemaGraves, 'ssancionados');//,'ssancionados');
-      const sSancionadosS3SV2Ind = new sSancionadosS3SV2(newdocument);
-      console.log(sSancionadosS3SV2Ind);
-      //// Si el JSON recibido es válido, puedes continuar con la operación de guardado en MongoDB
-      const result = await sSancionadosS3SV2Ind.save();
+      if (req.body.tipoDeFalta === "Grave")
+        {
+          const sSancionadosS3SV2 = S3S.model('Ssancionados', s3ServidoreschemaGraves, 'ssancionados');//,'ssancionados');
+          const sSancionadosS3SV2Ind = new sSancionadosS3SV2(newdocument);
+          console.log(sSancionadosS3SV2Ind);
+          //// Si el JSON recibido es válido, puedes continuar con la operación de guardado en MongoDB
+          const result = await sSancionadosS3SV2Ind.save();
+        }else {
+          const sSancionadosS3SV2 = S3S.model('Ssancionados', s3ServidoreschemaNoGraves, 'ssancionados');//,'ssancionados');
+          const sSancionadosS3SV2Ind = new sSancionadosS3SV2(newdocument);
+          console.log(sSancionadosS3SV2Ind);
+          //// Si el JSON recibido es válido, puedes continuar con la operación de guardado en MongoDB
+          const result = await sSancionadosS3SV2Ind.save();
+        }
       //console.log(result);
       //// se declara el objeto de respuesta
       let objResponse = {};
