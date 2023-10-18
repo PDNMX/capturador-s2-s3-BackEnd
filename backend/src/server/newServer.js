@@ -12,7 +12,7 @@ var swaggerValidator = require('swagger-object-validator');
 var _ = require('underscore');
 var jwt = require('jsonwebtoken');
 const crypto = require("crypto");
-const joi = require('joi');
+//const joi = require('joi');
 //// Biblioteca yup a consideracion para validaciones
 const Yup = require('yup');
 const User = require('./schemas/model.user');
