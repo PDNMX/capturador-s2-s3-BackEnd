@@ -1157,10 +1157,13 @@ app.put('/updateS2v2', async (req, res) => {
 app.post('/insertS3Sv2', async (req, res) => {
   try {
     var code = validateToken(req);
+    //console.log(code)
     if (code.code == 401) {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
+      //console.log("entrando 200")
       let usuario = req.body.usuario;
+      console.log(usuario)
       //// Se elimina el usuario del body
       delete req.body.usuario;
       // Utiliza el esquema de validación para verificar el JSON recibido
@@ -1171,36 +1174,62 @@ app.post('/insertS3Sv2', async (req, res) => {
       //console.log(newdocument);
       //// Se guarda el registro ssancionados en la base de datos
       //console.log("funcionando...")
-      if (req.body.tipoDeFalta === "Grave")
+      let result
+      if (newdocument.tipoDeFalta == "GRAVE")
         {
           const sSancionadosS3SV2 = S3S.model('Ssancionados', s3ServidoreschemaGraves, 'ssancionados');//,'ssancionados');
           const sSancionadosS3SV2Ind = new sSancionadosS3SV2(newdocument);
-          console.log(sSancionadosS3SV2Ind);
+          ///console.log(sSancionadosS3SV2Ind);
           //// Si el JSON recibido es válido, puedes continuar con la operación de guardado en MongoDB
-          const result = await sSancionadosS3SV2Ind.save();
-        }else {
+           result = await sSancionadosS3SV2Ind.save();
+          //// se declara el objeto de respuesta
+         /*  let objResponse = {};
+          objResponse['results'] = result;
+          console.log("objResponse")
+          //// A su vez insertamos el proovedor de datos asociado con el usuario
+          console.log(usuario);
+          let datausuario = await User.findById(usuario);
+          console.log(datausuario);
+          const proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: result._id, sistema: 'S3S', fechaCaptura:fecha, fechaActualizacion:fecha});      
+          let resp = await proveedorRegistros1.save(); 
+       */
+        } else if (newdocument.tipoDeFalta == "NO_GRAVE")
+        {
           const sSancionadosS3SV2 = S3S.model('Ssancionados', s3ServidoreschemaNoGraves, 'ssancionados');//,'ssancionados');
+          //console.log(sSancionadosS3SV2);
           const sSancionadosS3SV2Ind = new sSancionadosS3SV2(newdocument);
-          console.log(sSancionadosS3SV2Ind);
+          //console.log("dsfklfgjk");
+          //console.log(sSancionadosS3SV2Ind);
           //// Si el JSON recibido es válido, puedes continuar con la operación de guardado en MongoDB
-          const result = await sSancionadosS3SV2Ind.save();
-        }
+           result = await sSancionadosS3SV2Ind.save();
+          //console.log(result);
+          console.log("guardando no grave")
+          /**
+           * Reparar este bloque
+           * 
+           */
+          //// se declara el objeto de respuesta
+          
+      }
+
+        let objResponse = {};
+        objResponse['results'] = result;
+        //console.log("objResponse")
+        //// A su vez insertamos el proovedor de datos asociado con el usuario
+        //console.log(usuario);
+        let datausuario = await User.findById(usuario);
+        //console.log(datausuario);
+        const proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: result._id, sistema: 'S3S', fechaCaptura:fecha, fechaActualizacion:fecha});      
+        let resp = await proveedorRegistros1.save();
+
       //console.log(result);
-      //// se declara el objeto de respuesta
-      let objResponse = {};
-      objResponse['results'] = result;
-      //// A su vez insertamos el proovedor de datos asociado con el usuario
-      let datausuario = await User.findById(usuario);
-      //console.log(datausuario);
-      const proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: result._id, sistema: 'S3S', fechaCaptura:fecha, fechaActualizacion:fecha});      
-      let resp = await proveedorRegistros1.save(); 
       
       res.status(200).json({ message: 'Se realizarón las inserciones correctamente del s3sv2 y todos felices', Status: 200, response: newdocument });
       //res.status(200).json({ message: 'Se realizarón las inserciones correctamente', Status: 200, usuario: usuario, datausuario: datausuario, objResponse: objResponse });//, response:response});//, response: newdocument, usuario: usuario,  datausuario:datausuario, proveedorRegistros1_1:proveedorRegistros1 });
     }
   } catch (e) {
-    //console.log(e);
-    res.status(400).json({ Status: 400});
+    console.log("mandamos un error");
+    res.status(400).json({ Status: 400, message: "error 400"});
   } 
 });
   /*

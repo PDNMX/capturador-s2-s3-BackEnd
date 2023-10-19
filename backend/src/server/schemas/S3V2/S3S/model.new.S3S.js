@@ -10,18 +10,18 @@ const { type } = require('../../S2V2/model.joynew.s2');
 /* 
     Graves
 */
-const s3ServidoreschemaGraves = new Schema({
+const s3ServidoreschemaNoGraves = new Schema({
   // Propiedades comunes a todos los sancionados
-  tipoDeFalta: {
-    type: String,
-    required: false,
-  },
-  faltaGrave: 
+  tipoDeFalta: { type: String, required: false,},
+  expediente:{ type: String, required: false },
+  faltaNoGrave: 
   {
-    id: { type: String, required: false },
+    //id: { type: String, required: false },
+    ////**** Datos para guardar un historico */
     fechaCaptura: { type: Date, required: false },
     fechaActualizacion: { type: Date, required: false },
-    expediente: { type: String, required: false },
+    ///**** Datos para guardar un historico */
+
     nombres: { type: String, required: false },
     primerApellido: { type: String, required: false },
     segundoApellido: { 
@@ -51,15 +51,10 @@ const s3ServidoreschemaGraves = new Schema({
         type: Schema.Types.Mixed,
         required: false,
       },
-      autoridadSancionadora:{ type: String, required: false},
-      ordenJurisdiccionalSancion: { type: String, required: false},
       tipoSancion:[{type: Schema.Types.Mixed, required: false}],
+      autoridadSancionadora:{ type: String, required: false},
       observaciones: { type: String, required: false},
-
-
-    //type: Schema.Types.Mixed,
-    
-  },
+   },
  
 });
 
@@ -67,49 +62,12 @@ const s3ServidoreschemaGraves = new Schema({
   No graves
 */
 
-const s3ServidoreschemaNoGraves = new Schema({
-  // Propiedades comunes a todos los sancionados
+const s3ServidoreschemaGraves = new Schema({
   tipoDeFalta: {
     type: String,
     required: false,
   },
-  id: { type: String, required: false },
-  fechaCaptura: { type: Date, required: false },
-  fechaActualizacion: { type: Date, required: false },
-  expediente: { type: String, required: false },
-  nombres: { type: String, required: false },
-  primerApellido: { type: String, required: false },
-  segundoApellido: { 
-    valor: { type: String },
-    sinSegundoApellido: { type: Boolean, required:false },
-   },
-   curp: { type: String, required: false },
-   rfc: { type: String, required: false },
-   sexo: { type: String, enum: ["FEMENINO", "MASCULINO"], required: false },
-    entePublico:{
-      type: Schema.Types.Mixed, 
-      required: false,
-    },
-    empleoCargoComision: {
-      type: Schema.Types.Mixed,
-      required: false,
-    },
-    origenInvestigacion:{
-      type: Schema.Types.Mixed,
-      required: false,
-    },
-    faltaCometida:[{  
-      type: Schema.Types.Mixed,
-      required: false,
-    }], 
-    resolucion:{
-      type: Schema.Types.Mixed,
-      required: false,
-    },
-    autoridadSancionadora:{ type: String, required: false},
-    ordenJurisdiccionalSancion: { type: String, required: false},
-    tipoSancion:[{type: Schema.Types.Mixed, required: false}],
-    observaciones: { type: String, required: false},
+
 });
 
 s3ServidoreschemaGraves.plugin(mongoosePaginate);
