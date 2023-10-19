@@ -1224,8 +1224,10 @@ app.post('/insertS3Sv2', async (req, res) => {
 
       //console.log(result);
       
-      res.status(200).json({ message: 'Se realizarón las inserciones correctamente del s3sv2 y todos felices', Status: 200, response: newdocument });
+      //res.status(200).json({ message: 'Se realizarón las inserciones correctamente del s3sv2 y todos felices', Status: 200, response: newdocument });
       //res.status(200).json({ message: 'Se realizarón las inserciones correctamente', Status: 200, usuario: usuario, datausuario: datausuario, objResponse: objResponse });//, response:response});//, response: newdocument, usuario: usuario,  datausuario:datausuario, proveedorRegistros1_1:proveedorRegistros1 });
+      res.status(200).json(objResponse); 
+      
     }
   } catch (e) {
     console.log("mandamos un error");

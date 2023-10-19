@@ -67,7 +67,42 @@ const s3ServidoreschemaGraves = new Schema({
     type: String,
     required: false,
   },
-
+  expediente:{ type: String, required: false },
+  faltaGrave:{
+    nombres: { type: String, required: false },
+    primerApellido: { type: String, required: false },
+    segundoApellido: { 
+      valor: { type: String },
+      sinSegundoApellido: { type: Boolean, required:false },
+     },
+     curp: { type: String, required: false },
+     rfc: { type: String, required: false },
+     sexo: { type: String, enum: ["FEMENINO", "MASCULINO"], required: false },
+      entePublico:{
+        type: Schema.Types.Mixed, 
+        required: false,
+      },
+      empleoCargoComision: {
+        type: Schema.Types.Mixed,
+        required: false,
+      },
+      origenInvestigacion:{
+        type: Schema.Types.Mixed,
+        required: false,
+      },
+      faltaCometida:[{  
+        type: Schema.Types.Mixed,
+        required: false,
+      }],
+      resolucion:{
+        type: Schema.Types.Mixed,
+        required: false,
+      },
+      tipoSancion:[{type: Schema.Types.Mixed, required: false}],
+      autoridadSancionadora:{ type: String, required: false},
+      ordenJurisdiccionalSancion:{ type: Schema.Types.Mixed, required: false},
+      observaciones: { type: String, required: false},
+  }
 });
 
 s3ServidoreschemaGraves.plugin(mongoosePaginate);
