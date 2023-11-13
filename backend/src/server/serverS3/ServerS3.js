@@ -26,6 +26,8 @@ const Bitacora = require('../schemas/model.bitacora.js');
 const proveedorRegistros = require('../schemas/model.proveedorRegistros.js');
 const Provider = require('../schemas/model.proovedor.js');
 
+const { ObjectId } = require('mongodb');
+
 //// Schemas definidos para el capturador del s3v2
 const { s3SancionadosSchemaV2 } = require('../schemas/S3V2/S3S/model.new.joyS3Servidores.js');
 const { p3SancionadosSchemaV2 } = require('../schemas/S3V2/S3P/model.new.S3P.js');
@@ -918,7 +920,8 @@ app.post('/prueba', async (req, res) => {
       if (code.code == 401) {
         res.status(401).json({ code: '401', message: code.message });
       } else if (code.code == 200) {
-
+        console.log("prueba desde nuevo serverjs");
+        console.log("asdasdasdad")
         /* 
           Probando validador
         */
@@ -1234,14 +1237,13 @@ app.put('/updateS3Pv2', async (req, res) => {
 });
 //++++++++++++++++++++++++++++++++++++++ Fin API S3 V2  +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 /**************************************** Inicio endpoints de los once formatos  ******************************************************************************************/
-app.post('/insertS3v2', async (req, res) => {
+app.post('/insertS3/faltasAdministrativas/graves', async (req, res) => {
   try {
     var code = validateToken(req);
     if (code.code == 401) {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
-
-      let usuario = req.body.usuario;
+      const usuario = req.body.usuario;
       //// Se elimina el usuario del body
       delete req.body.usuario;
       // Utiliza el esquema de validación para verificar el JSON recibido
@@ -1249,35 +1251,41 @@ app.post('/insertS3v2', async (req, res) => {
       let fecha = moment().tz("America/Mexico_City").format();
       newdocument['fechaCaptura'] = fecha;
       newdocument['fechaActualizacion'] = fecha;
+      //// Se guarda el registro ssancionados en la base de datos
+      //console.log(newdocument);
+      let result;
+      let resp;
 
-      switch (true) {
-        case 'grave' in req.body:
-          //// Se guarda el registro ssancionados en la base de datos
-          //console.log(newdocument);
-          const S3Graves = S3.model('Graves', nuevoS3GraveSchema, 'graves');//,'ssancionados');
-          const S3GravesDocument = new S3Graves(newdocument);
-          //// Si el JSON recibido es válido, puedes continuar con la operación de guardado en MongoDB
-          const result = await S3GravesDocument.save();
-          console.log(result);
+      try{
+        const S3Graves = S3.model('Graves', nuevoS3GraveSchema, 'graves');//,'ssancionados');
+        const S3GravesDocument = new S3Graves(newdocument);
+        //// Si el JSON recibido es válido, puedes continuar con la operación de guardado en MongoDB
+        result = await S3GravesDocument.save();
+        /* console.log(result);
+        console.log("insertando en la coleccion graves") */;
+
+        try{
           //// se declara el objeto de respuesta
           let objResponse = {};
-          objResponse['results'] = result;
-          //// A su vez insertamos el proovedor de datos asociado con el usuario
-          let datausuario = await User.findById(usuario);
-          //console.log(datausuario);
-          const proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: result._id, sistema: 'S3S', fechaCaptura:fecha, fechaActualizacion:fecha});      
-          let resp = await proveedorRegistros1.save();
-          // El atributo "grave" está presente en req.body
-          console.log('Se encontró el atributo "grave" en el cuerpo de la solicitud.');
-          // Agrega aquí el código para manejar el caso cuando existe "grave"
-          //res.status(200).json({ message: 'El atributo "grave" está presente.' });
-          break;
-    
-        default:
-      
+          let _id = new ObjectId(usuario).toString();
+          let datausuario = await User.findById(_id);
+          
+          try{
+            const proveedorRegistros1 = new proveedorRegistros({ proveedorId: datausuario.proveedorDatos, registroSistemaId: result._id, sistema: 'S3', fechaCaptura:fecha, fechaActualizacion:fecha});      
+            resp = await proveedorRegistros1.save();
+          } catch(e){
+            console.log(e);
+          }
+        }
+        catch(e){
+          console.log(e);
+        }
       }
-      console.log("hola desde insertS3V2");
-      res.status(200).json({message: 'insertando desde S3 grave', data:req.body, res:_.result});
+      catch(e){
+        console.log(e);
+      }
+
+      res.status(200).json({message: 'insertando desde S3 grave', res: result, proveedor:resp});//, data:req.body, res:_.result});
     }
   }
   catch (e) {
@@ -1285,4 +1293,68 @@ app.post('/insertS3v2', async (req, res) => {
   }
   });
 
+  app.post('/listS3/faltasAdministrativas/graves', async (req, res) => {
+    try {
+      var code = validateToken(req);
+      if (code.code == 401) {
+        res.status(401).json({ code: '401', message: code.message });
+      } else if (code.code == 200) {
+        //// Se obtiene la información del usuario que esta realizando la petición
+        let usuario = await User.findById(req.body.idUser);
+        let proveedorDatos = usuario.proveedorDatos;
+        let sistema = 'S3';
+        const result = await proveedorRegistros.find({ sistema: sistema, proveedorId: proveedorDatos }).then();
+        let arrs3s = [];
+        _.map(result, row => {
+          arrs3s.push(row.registroSistemaId);
+        });
+  
+        let sancionados = S3.model('Graves', nuevoS3GraveSchema, 'graves');
+        let sortObj = req.body.sort === undefined ? {} : req.body.sort;
+        let page = req.body.page === undefined ? 1 : req.body.page; //numero de pagina a mostrar
+        let pageSize = req.body.pageSize === undefined ? 10 : req.body.pageSize;
+        let query = req.body.query === undefined ? {} : req.body.query;
+        if (!query._id) {
+          if (arrs3s.length > 0) {
+            query = { ...query, _id: { $in: arrs3s } };
+          } else {
+            query = { _id: { $in: arrs3s } };
+          }
+        }
+  
+        const paginationResult = await sancionados.paginate(query, { page: page, limit: pageSize, sort: sortObj }).then();
+        let objpagination = { hasNextPage: paginationResult.hasNextPage, page: paginationResult.page, pageSize: paginationResult.limit, totalRows: paginationResult.totalDocs };
+        let objresults = paginationResult.docs;
+  
+        let objResponse = {};
+        objResponse['pagination'] = objpagination;
+        objResponse['results'] = objresults;
+  
+        res.status(200).json(objResponse);
+        //// Regresa un json vacio con las opciones de paginacion
+        //res.status(200).json({"pagination":{"hasNextPage":false,"page":1,"pageSize":10,"totalRows":0},"results":[]});
+      }
+    }
+    catch (e) {
+      console.log(e);
+    }
+  });
+  
+  /* 
+    Endpoint para actualizar los documentos de la coleccion psancionados
+  */
+  app.put('/updateS3/faltasAdministrativas/graves', async (req, res) => {
+    try {
+      var code = validateToken(req);
+      if (code.code == 401) {
+        res.status(401).json({ code: '401', message: code.message });
+      } else if (code.code == 200) {
+
+        res.status(200).json({message: 'No haciendo nada desde updateS3Pv2', data:req.body});
+      }
+    }
+    catch (e) {
+      console.log(e);
+    }
+  });
 /**************************************** Fin endpoints de los once formatos  ******************************************************************************************/
