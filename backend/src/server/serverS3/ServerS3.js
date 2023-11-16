@@ -30,8 +30,9 @@ const { ObjectId } = require('mongodb');
 
 //// Schemas definidos para el capturador del s3v2
 const { s3SancionadosSchemaV2 } = require('../schemas/S3V2/S3S/model.new.joyS3Servidores.js');
-const { p3SancionadosSchemaV2 } = require('../schemas/S3V2/S3P/model.new.S3P.js');
+const { p3Sanci0onadosSchemaV2 } = require('../schemas/S3V2/S3P/model.new.S3P.js');
 const { s3ServidoreschemaGraves, s3ServidoreschemaNoGraves } = require('../schemas/S3V2/S3S/model.new.S3S.js'); 
+
 //// Esquemas definidos v1
 const { esquemaS2, schemaUserCreate, schemaUser, schemaProvider } = require('../schemas/yup.esquemas.js');
 
@@ -533,6 +534,7 @@ app.put('/edit/provider', async (req, res) => {
     console.log(e);
   }
 });
+
 /* 
     Endpoint para borrar los proveedores
 */
@@ -918,10 +920,11 @@ app.post('/prueba', async (req, res) => {
      try {
       var code = validateToken(req);
       if (code.code == 401) {
+        console.log("prueba fallida desde nuevo server3.js")
         res.status(401).json({ code: '401', message: code.message });
       } else if (code.code == 200) {
-        console.log("prueba desde nuevo serverjs");
-        console.log("asdasdasdad")
+        console.log("prueba exitosa desde nuevo server3.js");
+        console.log("asdasdasdad"); 
         /* 
           Probando validador
         */
@@ -945,6 +948,7 @@ app.post('/prueba', async (req, res) => {
   res.status(200).json({ message: 'prueba desde archivo limpio con resultado correcto para el s3 y el s2. Borrar este endpoint', Status: 200 });
  */
 });
+
 //------------------------------ Inicio de los endpoints para el api del capturador S2  ------------------------------------------------------
 //++++++++++++++++++++++++++++++++++++++ Inicio API S3 V2  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++//
 ///////////////////////////////////////////// S3S

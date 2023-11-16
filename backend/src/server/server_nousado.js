@@ -130,8 +130,6 @@ async function validateSchema(doc, schema, validacion) {
 }
 
 
-//create a new endpoint to /prueba and insert a json schema in a new collection mongodb
-
 app.post('/validateSchemaS2', async (req, res) => {
   try {
     var code = validateToken(req);
@@ -1947,7 +1945,7 @@ app.post('/prueba', async (req, res) => {
       res.status(401).json({ code: '401', message: code.message });
     } else if (code.code == 200) {
       res.status(200).json({ message: 'prueba con resultado correcto para el s3 y el s2.', Status: 200 });
-      console.log("prueba ejecutada correctamente")
+      console.log("prueba ejecutada correctamente desde server_nousado.js")
     }
   } catch (e) {
     console.log(e);

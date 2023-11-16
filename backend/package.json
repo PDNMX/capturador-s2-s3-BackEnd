@@ -23,8 +23,10 @@
     "yup": "^0.31.0"
   },
   "scripts": {
-    "dev": "nodemon ./src/server/serverS3/ServerS3.js",
-    "start": "node ./src/server/serverS3/ServerS3.js"
+    "dev": "nodemon ./src/server/server.js",
+    "start": "node ./src/server/server.js",
+    "dev3": "nodemon ./src/server/serverS3/ServerS3.js",
+    "start3": "node ./src/server/serverS3/ServerS3.js"
   },
   "eslintConfig": {
     "extends": [

@@ -928,7 +928,7 @@ app.post('/prueba', async (req, res) => {
           console.log("El JSON es válido");
         } */
         
-        res.status(200).json({ message: 'Haz llamado el endpoint prueba con exito.', Status: 200, data: req.body });
+        res.status(200).json({ message: 'Haz llamado el endpoint prueba con exito desde newserver,js.', Status: 200, data: req.body });
         //console.log("prueba ejecutada correctamente desde newserverjs")
       }
     } catch (e) {
