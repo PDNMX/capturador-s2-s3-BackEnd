@@ -25,6 +25,8 @@ console.log("DATABASE: ", DATABASE);
 const UserRoutes = require("./users/routes");
 const ProductRoutes = require("./products/routes"); */
 const S2Routes = require("./sistema2/routes");
+const providerRoutes = require("./archivosGenericos/providerRoutes");
+const userRoutes = require("./archivosGenericos/userRoutes");
 
 app.use(morgan("tiny"));
 app.use(cors());
@@ -51,6 +53,8 @@ const start = async () => {
     // Attaching the Authentication and User Routes to the app.
     //app.use("/", AuthorizationRoutes);
     app.use("/s2", S2Routes);
+    app.use("/", providerRoutes);
+    app.use("/", userRoutes);
 
     app.listen(PORT, () => console.log("Server Listening on PORT:", PORT));
   } catch (error) {

@@ -1,4 +1,4 @@
-const S2Model = require("../../common/models/S2");
+const S2Model = require("../models/S2");
 
 module.exports = {
   createS2: (req, res) => {
@@ -9,7 +9,7 @@ module.exports = {
         return res.status(200).json({
           status: true,
           data: s2.toJSON(),
-          message : "S2 creado correctamente desde proyecto con nombre api"
+          message : "S2 creado correctamente desde proyecto con nombre api desde insomnia"
         });
       })
       .catch((err) => {
