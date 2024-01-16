@@ -7,18 +7,24 @@ const morgan = require("morgan");
 
 const { port } = require("./config");
 
-const PORT = process.env.PORT || port;
-const USERMONGO = process.env.USERMONGO || "user-mongo";
-const PASSWORDMONGO = process.env.PASSWORDMONGO || "password123";
+const PORT = process.env.PORT || 3004;
+const USERMONGO = process.env.USERMONGO || "usuario-capturador";
+const PASSWORDMONGO = process.env.PASSWORDMONGO || "password-capturador";
 const HOSTMONGO = process.env.HOSTMONGO || "localhost";
-const DATABASE = process.env.DATABASE || "database";
+const DATABASE = process.env.DATABASE || "admin";
+
+console.log("PORT: ", PORT);
+console.log("USERMONGO: ", USERMONGO);
+console.log("PASSWORDMONGO: ", PASSWORDMONGO);
+console.log("HOSTMONGO: ", HOSTMONGO);
+console.log("DATABASE: ", DATABASE);  
+
 
 // Express Routes Import
 /* const AuthorizationRoutes = require("./authorization/routes");
 const UserRoutes = require("./users/routes");
 const ProductRoutes = require("./products/routes"); */
 const S2Routes = require("./sistema2/routes");
-
 
 app.use(morgan("tiny"));
 app.use(cors());
@@ -41,6 +47,7 @@ const start = async () => {
         DATABASE,
       { useNewUrlParser: true, useUnifiedTopology: true },
     );
+
     // Attaching the Authentication and User Routes to the app.
     //app.use("/", AuthorizationRoutes);
     app.use("/s2", S2Routes);

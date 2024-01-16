@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { jwtSecret } = require("../../config");
-const SEED = process.env.SEED || jwtSecret;
+const SEED = process.env.SEED || 'jkfdjkndfnjkdfiu4384843893489dsjksd';
 
 module.exports = {
   check: (req, res, next) => {

@@ -2,29 +2,73 @@ const router = require("express").Router();
 
 // Controller Imports
 const S2Controller = require("./controllers/S2Controller");
-
+const ProviderController = require("./controllers/ProviderController");
 // Middleware Imports
 const isAuthenticatedMiddleware = require("./../common/middlewares/IsAuthenticatedMiddleware");
 const SchemaValidationMiddleware = require("../common/middlewares/SchemaValidationMiddleware");
 /* const CheckPermissionMiddleware = require("../common/middlewares/CheckPermissionMiddleware");
 // JSON Schema Imports for payload verification */
 const createS2Payload = require("./schemas/createS2Payload");
+
 /* const updateProductPayload = require("./schemas/updateProductPayload");
 const { roles } = require("../config"); */
 
 router.get('/hola', [isAuthenticatedMiddleware.check], (_, res) => {
-  res.send('Hello from A!')
+  res.send('Hello from A!, el backend de S2 está funcionando correctamente!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
 })
+
+//********************************************************** crear proveedoor */*********************************************************/
+
+router.post(
+  "/createProvider",
+  [
+    isAuthenticatedMiddleware.check,
+    /* CheckPermissionMiddleware.has(roles.ADMIN), */
+    //SchemaValidationMiddleware.verify(createS2Payload),
+  ],
+  ProviderController.createProvider
+/*   (_,res) => {
+    res.send(' funcionando correctamente!')
+  } */
+);
+
+router.post(
+  "/editProvider/:id",
+  [
+    isAuthenticatedMiddleware.check,
+    /* CheckPermissionMiddleware.has(roles.ADMIN), */
+    //SchemaValidationMiddleware.verify(createS2Payload),
+  ],
+  ProviderController.editProvider
+  /*(_,res) => {
+    res.send(' funcionando correctamente desde el edit provider router!')
+  } */
+);
+
+/********************************************************* Final crear proveedoor **********************************************************/
 
 router.post(
   "/create",
   [
     isAuthenticatedMiddleware.check,
     /* CheckPermissionMiddleware.has(roles.ADMIN), */
-    SchemaValidationMiddleware.verify(createS2Payload),
+    //SchemaValidationMiddleware.verify(createS2Payload),
   ],
   S2Controller.createS2
 );
+
+router.post(
+  "/insert",
+  [
+    isAuthenticatedMiddleware.check,
+  ],
+  //S2Controller.insertS2
+   (_, res) => {
+    res.send(' Otro endpoint está para insertar está funcionando correctamente!')
+  }
+ 
+  );
+
 
 /* router.get(
   "/",
