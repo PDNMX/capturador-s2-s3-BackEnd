@@ -25,11 +25,12 @@ const mongoose = require('mongoose')
     //const S2 = mongoose.connection.useDb("S2").model("spic", S2Schema, "spic");
     // Exportar las funciones del modelo de producto
     module.exports = {
-    createUser: (data) => {
-        const user = new User(data);
-        return user.save();
-    },
-    updateUser: (id, data) => {
-        console.log("hola desde la edicion del provider");
-    }
+        createUser: (data) => {
+            
+            const user = new User(data);
+            return user.save();
+        },
+        updateUser: (id, data) => {
+            console.log("hola desde la edicion del provider");
+        }
     };

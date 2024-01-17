@@ -23,11 +23,11 @@ module.exports = {
           }); 
       },
       editProvider: (req, res) => {
-        const {body} = req;
+        /* const {body} = req;
         let id = req.body._id.toString();
-        let sistemasproveedor = req.body.sistemas;
+        //let sistemasproveedor = req.body.sistemas;
         //let usuarios = await User.find({ proveedorDatos: id });
-        let nuevoSistemas = [];
+        let nuevoSistemas = []; */
 
         console.log("hola desde la edicion del provider");
         // Hacer el siguiente update para la tabla users en caso de que se cumpla la condicion 
@@ -38,15 +38,15 @@ module.exports = {
         //User.updateMany({ proveedorDatos: req.body._id }, { estatus: false }).exec();
 
         // Validación de datos
-        if (!body.name || !body.description) {
+        /* if (!body.name || !body.description) {
           return res.status(400).json({
             status: false,
             error: "Los campos nombre y descripción son obligatorios",
           });
-        }
+        } */
       
         // Actualización del proveedor
-        ProviderModel.updateProvider(id, body)
+        /* ProviderModel.updateProvider(id, body)
           .then((provider) => {
             //console.log(req);
             return res.status(200).json({
@@ -61,7 +61,7 @@ module.exports = {
               error: err,
               message: "Hubo un error",
             });
-          });
+          }); */
       },
       
 }

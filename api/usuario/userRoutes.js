@@ -1,7 +1,7 @@
 const router = require("express").Router();
 
 // Controller Imports
-const ProviderController = require("./controllers/ProviderController");
+const User = require("../usuario/controllers/UserController");
 // Middleware Imports
 const isAuthenticatedMiddleware = require("../common/middlewares/IsAuthenticatedMiddleware");
 const SchemaValidationMiddleware = require("../common/middlewares/SchemaValidationMiddleware");
@@ -16,6 +16,21 @@ router.post(
     }
 );
 
+router.post(
+    "/create/user", 
+    [
+      isAuthenticatedMiddleware.check,
+      /* CheckPermissionMiddleware.has(roles.ADMIN), */
+      //SchemaValidationMiddleware.verify(createS2Payload),
+    ],
+    User.createUser
+  /*   (_,res) => {
+      res.send(' funcionando correctamente!')
+    } */
+
+);
+
+router
 
 module.exports = router;
 

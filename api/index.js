@@ -7,7 +7,7 @@ const morgan = require("morgan");
 
 const { port } = require("./config");
 
-const PORT = process.env.PORT || 3004;
+const PORT = process.env.PORT || 30040;
 const USERMONGO = process.env.USERMONGO || "usuario-capturador";
 const PASSWORDMONGO = process.env.PASSWORDMONGO || "password-capturador";
 const HOSTMONGO = process.env.HOSTMONGO || "localhost";
@@ -25,8 +25,8 @@ console.log("DATABASE: ", DATABASE);
 const UserRoutes = require("./users/routes");
 const ProductRoutes = require("./products/routes"); */
 const S2Routes = require("./sistema2/routes");
-const providerRoutes = require("./archivosGenericos/providerRoutes");
-const userRoutes = require("./archivosGenericos/userRoutes");
+const providerRoutes = require("./proveedor/providerRoutes");
+const userRoutes = require("./usuario/userRoutes");
 
 app.use(morgan("tiny"));
 app.use(cors());

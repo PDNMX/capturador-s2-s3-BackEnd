@@ -9,11 +9,11 @@ const SchemaValidationMiddleware = require("../common/middlewares/SchemaValidati
 //********************************************************** crear proveedoor */*********************************************************/
 
 router.post(
-    "/probar123",
+    "/proveedor123",
 
     (_,res) => {
       console.log("hola desde el router de probar123");
-      res.send(' funcionando correctamente desde rutas genericas!')
+      res.send(' funcionando correctamente desde proveedor!')
     }
 );
 
