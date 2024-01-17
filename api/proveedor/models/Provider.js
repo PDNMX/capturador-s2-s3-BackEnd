@@ -16,6 +16,7 @@ const Provider = mongoose.connection.useDb("administracionUsuarios").model("proo
 // Exportar las funciones del modelo de producto
 module.exports = {
   insertProvider: (data) => {
+    data['estatus'] = true;
     const provider = new Provider(data);
     return provider.save();
   },

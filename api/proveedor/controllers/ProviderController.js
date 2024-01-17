@@ -3,6 +3,7 @@ const ProviderModel = require("../models/Provider");
 module.exports = {
     createProvider: (req, res) => {
         const {body} = req;
+        body['estatus'] = true;
         //console.log(req.body);
         
          ProviderModel.insertProvider(body)
