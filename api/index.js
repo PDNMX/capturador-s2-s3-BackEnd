@@ -7,11 +7,11 @@ const morgan = require("morgan");
 
 const { port } = require("./config");
 
-const PORT = process.env.PORT || 30040;
-const USERMONGO = process.env.USERMONGO || "usuario-capturador";
-const PASSWORDMONGO = process.env.PASSWORDMONGO || "password-capturador";
-const HOSTMONGO = process.env.HOSTMONGO || "localhost";
-const DATABASE = process.env.DATABASE || "admin";
+const PORT = process.env.PORT;
+const USERMONGO = process.env.USERMONGO;
+const PASSWORDMONGO = process.env.PASSWORDMONGO;
+const HOSTMONGO = process.env.HOSTMONGO;
+const DATABASE = process.env.DATABASE;
 
 console.log("PORT: ", PORT);
 console.log("USERMONGO: ", USERMONGO);
