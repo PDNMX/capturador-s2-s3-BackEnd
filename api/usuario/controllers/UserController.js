@@ -131,6 +131,56 @@ module.exports = {
             return res.status(500).json({ message: 'Error en el servidor.' });
         }
     },
+    getUsersFull: async (req, res) => {
+        try {
+            // Obtener parámetros de consulta
+            const result = await User.find({ fechaBaja: null, rol: '2' }).then();
+            let objResponse = {};
+            objResponse['results'] = result;
+            res.status(200).json(objResponse);
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Error en el servidor.' });
+        }
+    },
+    getUsersAll: async (req, res) => {
+        try {
+            // Obtener parámetros de consulta
+            const result = await User.find({ fechaBaja: null }).then();
+            let objResponse = {};
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Error en el servidor.' });
+        }
+    },
+    getUsersAll: async (req, res) => {
+        try {
+            const result = await User.find({ rol: '2' });
+            let objResponse = {};
+            
+            try {
+              var strippedRows = result.map(row => {
+                let label;
+                if (row.apellidoDos === undefined) {
+                  label = `${row.nombre} ${row.apellidoUno}`;
+                } else {
+                  label = `${row.nombre} ${row.apellidoUno} ${row.apellidoDos}`;
+                }
+                let rowExtend = { label: label, value: row._id, ...row.toObject() };
+                return rowExtend;
+              });
+            } catch (e) {
+              console.log(e);
+              return res.status(500).json({ message: 'Error en el servidor.' });
+            }
+            
+            objResponse['results'] = strippedRows;
+            res.status(200).json(objResponse);
+          } catch (error) {
+            console.error(error);
+            return res.status(500).json({ message: 'Error en el servidor.' });
+          }  
+    },
     validationpassword: async (req, res) => {
         try {
             const { id_usuario } = req.body;

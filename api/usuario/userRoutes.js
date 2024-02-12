@@ -6,6 +6,7 @@ const User = require("../usuario/controllers/UserController");
 const isAuthenticatedMiddleware = require("../common/middlewares/IsAuthenticatedMiddleware");
 const SchemaValidationMiddleware = require("../common/middlewares/SchemaValidationMiddleware");
 const UserController = require("../usuario/controllers/UserController");
+const { Router } = require("express");
 
 //********************************************************** crear usuario */*********************************************************/
 
@@ -50,6 +51,17 @@ router.post('/getUsers', [
   /* CheckPermissionMiddleware.has(roles.ADMIN), */
   //SchemaValidationMiddleware.verify(createS2Payload),
 ], UserController.getUsers);
+
+router.post('/getUsersFull', [
+  isAuthenticatedMiddleware.check,
+  /* CheckPermissionMiddleware.has(roles.ADMIN), */
+  //SchemaValidationMiddleware.verify(createS2Payload),
+], UserController.getUsersFull);
+
+router.post('/getUsersAll', [
+  isAuthenticatedMiddleware.check
+], 
+UserController.getUsersAll);
 
 router.post('/validationpassword', [
   isAuthenticatedMiddleware.check,
